@@ -1,4 +1,4 @@
-// Arcade-cabinet HTML overlay: neon HUD, player cards, modals, CRT scanlines.
+// Arcade-cabinet HTML overlay: neon HUD, scoreboard strip, modals, CRT scanlines.
 import Phaser from 'phaser';
 import type {GameScene} from './GameScene.ts';
 import {TOKEN_COLORS} from './GameScene.ts';
@@ -10,7 +10,9 @@ const CSS: string=`.tsch-btn{font-family:'VT323',monospace;font-size:18px;backgr
 .tsch-glow{border-color:#ffd319 !important;text-shadow:0 0 8px #ffd319 !important;box-shadow:0 0 18px rgba(255,211,25,.85) !important;animation:tsch-blink 1s infinite;}
 .tsch-in{font-family:'VT323',monospace;font-size:17px;background:#0a0420;color:#ffd319;border:2px solid #b026ff;margin:2px;padding:2px 6px;max-width:150px;}
 .tsch-top{background:linear-gradient(180deg,#0a0420,#1a0533) !important;border-bottom:2px solid #ff2e88 !important;box-shadow:0 2px 18px rgba(255,46,136,.5) !important;font-family:'VT323',monospace !important;font-size:21px !important;color:#fff !important;text-shadow:0 0 8px #22d3ee !important;}
-.tsch-players{background:rgba(10,4,32,.93) !important;border:2px solid #b026ff !important;box-shadow:0 0 16px rgba(176,38,255,.5) !important;font-family:'VT323',monospace !important;}
+.tsch-cards{background:rgba(10,4,32,.93) !important;border-bottom:2px solid #b026ff !important;box-shadow:0 2px 14px rgba(176,38,255,.45) !important;font-family:'VT323',monospace !important;display:flex !important;gap:8px !important;padding:4px 10px !important;flex-wrap:wrap !important;}
+.tsch-card{border:1px solid #444466;padding:0 8px;min-width:150px;line-height:1.05;}
+.tsch-card-cur{border-color:#ffd319 !important;box-shadow:0 0 12px rgba(255,211,25,.65);}
 .tsch-bot{background:linear-gradient(0deg,#0a0420,#1a0533) !important;border-top:2px solid #22d3ee !important;box-shadow:0 -2px 18px rgba(34,211,238,.4) !important;font-family:'VT323',monospace !important;}
 .tsch-msg{color:#ffd319;font-size:21px;min-height:24px;text-shadow:0 0 8px rgba(255,211,25,.6);}
 .tsch-due{color:#ff5b5b !important;text-shadow:0 0 10px #ff0000 !important;animation:tsch-blink .6s infinite;}
@@ -88,8 +90,8 @@ export class UIScene extends Phaser.Scene{
         r.appendChild(top);
         this.topBar=top;
         let pl: HTMLElement=document.createElement('div');
-        pl.className='tsch-players';
-        pl.setAttribute('style', 'position:absolute;top:52px;right:6px;width:250px;color:#fff;padding:8px;font-size:19px;pointer-events:auto;max-height:58vh;overflow:auto;');
+        pl.className='tsch-cards';
+        pl.setAttribute('style', 'position:absolute;top:34px;left:0;right:0;color:#fff;font-size:18px;pointer-events:auto;');
         r.appendChild(pl);
         this.plist=pl;
         let bot: HTMLElement=document.createElement('div');
@@ -288,10 +290,12 @@ export class UIScene extends Phaser.Scene{
             for(let i=0;i<gs.state.players.length;i++){
                 let p: (typeof gs.state.players)[number]=gs.state.players[i] as (typeof gs.state.players)[number];
                 let hex: string='#' + (TOKEN_COLORS[i % TOKEN_COLORS.length] as number).toString(16).padStart(6, '0');
-                let head: HTMLElement=this.el('div', 'font-size:21px;' + (i===s.cur?'text-shadow:0 0 10px ' + hex + ';':''), this.plist, '');
+                let card: HTMLElement=document.createElement('div');
+                card.className='tsch-card' + (i===s.cur?' tsch-card-cur':'');
+                this.plist.appendChild(card);
+                let head: HTMLElement=this.el('div', 'font-size:20px;color:' + hex + ';' + (i===s.cur?'text-shadow:0 0 10px ' + hex + ';':''), card, '');
                 head.textContent=(i===s.cur?'> ':'') + p.name + (p.isBankrupt?' X BANKRUPT':'');
-                head.setAttribute('style', 'font-size:21px;color:' + hex + ';' + (i===s.cur?'text-shadow:0 0 10px ' + hex + ';':''));
-                this.el('div', 'color:#9d9db8;font-size:18px;margin-bottom:4px;', this.plist, '' + p.credits + 'CR D' + p.debtToBank + ' H' + p.hype + ' C' + p.concrete + ' S' + p.steel + ' G' + p.glass + ' @' + p.position + ' [' + p.ownedPlots.length + ']');
+                this.el('div', 'color:#c9c9e3;font-size:17px;', card, '' + p.credits + 'CR DEBT' + p.debtToBank + ' H' + p.hype + ' C' + p.concrete + ' S' + p.steel + ' G' + p.glass + ' @' + p.position + ' PLOTS' + p.ownedPlots.length);
             }
         }
         if(this.msg!==null){
