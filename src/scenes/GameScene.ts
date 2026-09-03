@@ -15,6 +15,7 @@ const FONT_BODY: string='"VT323","Courier New",monospace';
 export type TurnStage='SETUP'|'ROLL'|'MOVING'|'RESOLVE'|'ACTION'|'GAMEOVER';
 export interface AuctionState{plotId: number, bid: number, bidder: number|null, turn: number, active: Array<boolean>}
 export const TOKEN_COLORS: Array<number>=[0xef4444, 0x3b82f6, 0xeab308, 0x22c55e, 0xa855f7, 0xf97316];
+const TOKEN_SCALE: number=1.15;
 export class GameScene extends Phaser.Scene{
     state: GameState=new GameState();
     stage: TurnStage='SETUP';
@@ -30,7 +31,6 @@ export class GameScene extends Phaser.Scene{
     rects: Array<Phaser.GameObjects.Rectangle|null>=[];
     owners: Array<Phaser.GameObjects.Text|null>=[];
     tokens: Array<Phaser.GameObjects.Image>=[];
-    msgText: Phaser.GameObjects.Text|null=null;
     diceText: Phaser.GameObjects.Text|null=null;
     bannerText: Phaser.GameObjects.Text|null=null;
     ring: Phaser.GameObjects.Rectangle|null=null;
@@ -40,9 +40,6 @@ export class GameScene extends Phaser.Scene{
     create(): void{
         this.buildBackground();
         this.renderBoardStatic();
-        this.msgText=this.add.text(12, 44, this.statusMsg, {fontFamily: FONT_BODY, fontSize: '22px', color: '#ffffff', wordWrap: {width: 620}});
-        this.msgText.setDepth(20);
-        this.msgText.setShadow(2, 2, '#000000', 0, true, true);
         this.diceText=this.add.text(this.scale.width/2, this.scale.height/2-40, '', {fontFamily: FONT_DISPLAY, fontSize: '54px', color: '#ffd319'});
         this.diceText.setOrigin(0.5);
         this.diceText.setDepth(30);
@@ -53,7 +50,7 @@ export class GameScene extends Phaser.Scene{
         this.bannerText.setDepth(30);
         this.bannerText.setStroke('#05010f', 6);
         this.bannerText.setVisible(false);
-        this.ring=this.add.rectangle(0, 0, 98, 60, 0xffffff, 0);
+        this.ring=this.add.rectangle(0, 0, 96, 52, 0xffffff, 0);
         this.ring.setStrokeStyle(3, 0xffffff, 1);
         this.ring.setDepth(5);
         this.ring.setVisible(false);
@@ -158,13 +155,13 @@ export class GameScene extends Phaser.Scene{
         for(let i=0;i<40;i++){
             let p: {x: number, y: number}=Board.posFor(i, w, h);
             let c: number=colorForSpace(i);
-            this.add.rectangle(p.x, p.y, 96, 58, c, 0.20);
-            let face: Phaser.GameObjects.Rectangle=this.add.rectangle(p.x, p.y, 86, 48, 0x0d0424, 0.93);
+            this.add.rectangle(p.x, p.y, 92, 48, c, 0.20);
+            let face: Phaser.GameObjects.Rectangle=this.add.rectangle(p.x, p.y, 88, 44, 0x0d0424, 0.94);
             face.setStrokeStyle(2, c, 1);
             this.rects[i]=face;
-            this.add.rectangle(p.x, p.y-19, 86, 7, c, 1);
-            this.add.text(p.x, p.y-5, '' + i + ' ' + labelForSpace(i), {fontFamily: FONT_BODY, fontSize: '19px', color: '#ffffff'}).setOrigin(0.5);
-            let o: Phaser.GameObjects.Text=this.add.text(p.x, p.y+14, '', {fontFamily: FONT_BODY, fontSize: '19px', color: '#ffd319'}).setOrigin(0.5);
+            this.add.rectangle(p.x, p.y-18, 88, 7, c, 1);
+            this.add.text(p.x, p.y-4, '' + i + ' ' + labelForSpace(i), {fontFamily: FONT_BODY, fontSize: '18px', color: '#ffffff'}).setOrigin(0.5);
+            let o: Phaser.GameObjects.Text=this.add.text(p.x, p.y+12, '', {fontFamily: FONT_BODY, fontSize: '17px', color: '#ffd319'}).setOrigin(0.5);
             this.owners[i]=o;
         }
     }
@@ -215,7 +212,6 @@ export class GameScene extends Phaser.Scene{
         this.statusMsg='Round 1 BOOM. ' + (st.players[0] as PlayerData).name + ' to roll.';
         this.spawnTokens();
         this.refreshBoard();
-        this.refreshMsg();
         BGMPlayer.instance().fanfare();
         this.banner('ROUND 1 - BOOM!', '#ffd319');
     }
@@ -229,8 +225,8 @@ export class GameScene extends Phaser.Scene{
         this.tokens=[];
         for(let i=0;i<this.state.players.length;i++){
             let key: string=this.makeTokenTexture(i);
-            let c: Phaser.GameObjects.Image=this.add.image(24+i*22, 64, key);
-            c.setScale(1.4);
+            let c: Phaser.GameObjects.Image=this.add.image(24+i*22, 400, key);
+            c.setScale(TOKEN_SCALE);
             c.setDepth(10);
             this.tokens.push(c);
         }
@@ -265,14 +261,8 @@ export class GameScene extends Phaser.Scene{
             rg.setVisible(false);
         }
     }
-    refreshMsg(): void{
-        if(this.msgText!==null){
-            this.msgText.setText(this.statusMsg);
-        }
-    }
     say(s: string): void{
         this.statusMsg=s;
-        this.refreshMsg();
     }
     plotById(id: number): PlotData|null{
         for(let i=0;i<this.state.plots.length;i++){
@@ -446,8 +436,8 @@ export class GameScene extends Phaser.Scene{
         BGMPlayer.instance().land();
         let tok: Phaser.GameObjects.Image|undefined=this.tokens[this.state.currentPlayerIndex];
         if(tok!==undefined&&tok!==null){
-            this.tweens.add({targets: tok, scaleX: 1.8, scaleY: 1.0, duration: 110, yoyo: true, onComplete: ()=>{
-                tok.setScale(1.4);
+            this.tweens.add({targets: tok, scaleX: TOKEN_SCALE+0.65, scaleY: TOKEN_SCALE-0.15, duration: 110, yoyo: true, onComplete: ()=>{
+                tok.setScale(TOKEN_SCALE);
             }});
         }
         let bp: {x: number, y: number}=Board.posFor(p.position, this.scale.width, this.scale.height-150);
@@ -735,7 +725,6 @@ export class GameScene extends Phaser.Scene{
         }
         this.stage='ACTION';
         this.refreshBoard();
-        this.refreshMsg();
     }
     confirmBuy(): void{
         if(this.pendingBuyPlotId===null){
@@ -762,7 +751,6 @@ export class GameScene extends Phaser.Scene{
         this.floatText(bp.x, bp.y-46, '-' + pl.baseCost + ' CR', '#ffd319');
         this.pendingBuyPlotId=null;
         this.refreshBoard();
-        this.refreshMsg();
     }
     declineBuy(): void{
         this.pendingBuyPlotId=null;
