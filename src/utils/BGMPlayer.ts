@@ -198,4 +198,70 @@ export class BGMPlayer{
         hg.connect(m);
         src.start(t);
     }
+    tone(freq: number, dur: number, type: OscillatorType, vol: number, when: number): void{
+        if(this.ctx===null||this.master===null){
+            return;
+        }
+        let c: AudioContext=this.ctx as AudioContext;
+        let m: GainNode=this.master as GainNode;
+        let o: OscillatorNode=c.createOscillator();
+        o.type=type;
+        o.frequency.value=freq;
+        let g: GainNode=c.createGain();
+        g.gain.setValueAtTime(vol, when);
+        g.gain.exponentialRampToValueAtTime(0.01, when+dur);
+        o.connect(g);
+        g.connect(m);
+        o.start(when);
+        o.stop(when+dur+0.02);
+    }
+    now(): number{
+        if(this.ctx===null){
+            return 0;
+        }
+        return (this.ctx as AudioContext).currentTime;
+    }
+    arp(notes: Array<number>, gap: number, type: OscillatorType, vol: number): void{
+        if(!this.ensureCtx()){
+            return;
+        }
+        let t: number=this.now()+0.01;
+        for(let i=0;i<notes.length;i++){
+            let f: number=notes[i] as number;
+            this.tone(f, 0.12, type, vol, t+i*gap);
+        }
+    }
+    click(): void{
+        this.arp([880], 0.05, 'square', 0.22);
+    }
+    tick(): void{
+        this.arp([660], 0.05, 'square', 0.14);
+    }
+    step(): void{
+        this.arp([440], 0.05, 'square', 0.10);
+    }
+    dice(): void{
+        this.arp([392, 523, 659], 0.06, 'square', 0.20);
+    }
+    coin(): void{
+        this.arp([988, 1319], 0.07, 'square', 0.25);
+    }
+    land(): void{
+        this.arp([220], 0.10, 'triangle', 0.30);
+    }
+    build(): void{
+        this.arp([523, 659, 784], 0.07, 'square', 0.25);
+    }
+    card(): void{
+        this.arp([330, 392], 0.08, 'square', 0.22);
+    }
+    crash(): void{
+        this.arp([300, 150, 90, 55], 0.16, 'sawtooth', 0.35);
+    }
+    bankrupt(): void{
+        this.arp([400, 300, 200, 120], 0.14, 'sawtooth', 0.30);
+    }
+    fanfare(): void{
+        this.arp([523, 659, 784, 1047], 0.09, 'square', 0.28);
+    }
 }
