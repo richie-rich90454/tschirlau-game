@@ -1,0 +1,20 @@
+{
+  "name": "tschirlau-game",
+  "scripts": {
+    "dev": "bun --hot index.html",
+    "build": "bun build src/main.ts --outdir=dist --target=browser --format=esm --sourcemap --minify",
+    "serve": "bunx --yes http-server dist -p 8080 -c-1",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "phaser": "^4.2.1"
+  }
+}
