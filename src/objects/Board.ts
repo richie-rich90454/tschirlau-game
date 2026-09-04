@@ -1,9 +1,9 @@
 // Maps 40 board indices to pixel positions on a rectangular loop.
 export interface BoardPos{x: number, y: number}
 export class Board{
-    static posFor(index: number, w: number, h: number): BoardPos{
+    static posFor(index: number, w: number, top: number, h: number): BoardPos{
         let cx: number=w/2;
-        let cy: number=h/2+37;
+        let cy: number=top+h/2;
         let rx: number=Math.min(w*0.44, 450);
         let ry: number=Math.min(h*0.368, 227);
         let per: number=10;
