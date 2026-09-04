@@ -1,7 +1,7 @@
 // 80s arcade title screen: synthwave sun, starfield, scrolling grid, blinking start.
 import Phaser from 'phaser';
-const FONT_DISPLAY: string='"Press Start 2P","Courier New",monospace';
-const FONT_BODY: string='"VT323","Courier New",monospace';
+const FONT_DISPLAY: string='"Noto Sans Mono",monospace';
+const FONT_BODY: string='"Noto Sans Mono",monospace';
 export class BootScene extends Phaser.Scene{
     started: boolean=false;
     constructor(){
@@ -96,18 +96,18 @@ export class BootScene extends Phaser.Scene{
         }
         let sweep: Phaser.GameObjects.Rectangle=this.add.rectangle(cx, horizon, w, 3, 0x22d3ee, 0.9);
         this.tweens.add({targets: sweep, y: h, duration: 1600, repeat: -1, ease: 'Cubic.easeIn'});
-        this.add.text(cx, 84, 'TSCHIRLAU SOFT PRESENTS', {fontFamily: FONT_BODY, fontSize: '24px', color: '#22d3ee'}).setOrigin(0.5);
-        let title: Phaser.GameObjects.Text=this.add.text(cx, 190, 'TSCHIRLAU', {fontFamily: FONT_DISPLAY, fontSize: '64px', color: '#ffd319'});
+        this.add.text(cx, 84, 'richie-rich90454 PRESENTS', {fontFamily: FONT_BODY, fontSize: '24px', color: '#22d3ee'}).setOrigin(0.5).setStroke('#05010f', 5);
+        let title: Phaser.GameObjects.Text=this.add.text(cx, 190, 'TSCHIRLAU', {fontFamily: FONT_DISPLAY, fontSize: '64px', fontStyle: 'bold', color: '#ffd319'});
         title.setOrigin(0.5);
         title.setStroke('#ff2e88', 8);
         title.setShadow(0, 6, '#ff2e88', 0, true, true);
         this.tweens.add({targets: title, y: 184, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'});
-        this.add.text(cx, 268, 'THE GRAND GATE MIRAGE', {fontFamily: FONT_DISPLAY, fontSize: '20px', color: '#22d3ee'}).setOrigin(0.5);
-        this.add.text(cx, 308, 'A REAL-ESTATE FEVER DREAM IN 40 SPACES', {fontFamily: FONT_BODY, fontSize: '24px', color: '#ff71ce'}).setOrigin(0.5);
-        let press: Phaser.GameObjects.Text=this.add.text(cx, h-176, 'PRESS SPACE OR CLICK TO START', {fontFamily: FONT_DISPLAY, fontSize: '16px', color: '#ffffff'}).setOrigin(0.5);
+        this.add.text(cx, 268, 'THE GRAND GATE MIRAGE', {fontFamily: FONT_DISPLAY, fontSize: '20px', color: '#22d3ee'}).setOrigin(0.5).setStroke('#05010f', 6);
+        this.add.text(cx, 308, 'A REAL-ESTATE FEVER DREAM IN 40 SPACES', {fontFamily: FONT_BODY, fontSize: '24px', color: '#ff71ce'}).setOrigin(0.5).setStroke('#05010f', 6);
+        let press: Phaser.GameObjects.Text=this.add.text(cx, h-176, 'PRESS SPACE OR CLICK TO START', {fontFamily: FONT_DISPLAY, fontSize: '16px', color: '#ffffff'}).setOrigin(0.5).setStroke('#05010f', 5);
         this.tweens.add({targets: press, alpha: 0.15, duration: 520, yoyo: true, repeat: -1});
-        this.add.text(cx, h-132, '2-6 TYCOONS - HOT-SEAT - LAST SOLVENT WINS', {fontFamily: FONT_BODY, fontSize: '22px', color: '#b026ff'}).setOrigin(0.5);
-        this.add.text(cx, h-96, '(C) 198X TSCHIRLAU SOFT - INSERT COIN', {fontFamily: FONT_BODY, fontSize: '20px', color: '#5b5b7a'}).setOrigin(0.5);
+        this.add.text(cx, h-132, '2-6 TYCOONS · HOT-SEAT · LAST SOLVENT WINS', {fontFamily: FONT_BODY, fontSize: '22px', color: '#ff71ce'}).setOrigin(0.5).setStroke('#05010f', 4);
+        this.add.text(cx, h-96, '(c) 2026 richie-rich90454 · INSERT COIN', {fontFamily: FONT_BODY, fontSize: '20px', color: '#c9c9e3'}).setOrigin(0.5).setStroke('#05010f', 4);
         for(let i=0;i<28;i++){
             let bw: number=w/30;
             let bar: Phaser.GameObjects.Rectangle=this.add.rectangle(8+i*(bw+3), h-8, bw, 30, i%2===0?0xff2e88:0x22d3ee, 0.85);
