@@ -31,6 +31,9 @@ export class GameScene extends Phaser.Scene{
     rects: Array<Phaser.GameObjects.Rectangle|null>=[];
     owners: Array<Phaser.GameObjects.Text|null>=[];
     tokens: Array<Phaser.GameObjects.Image>=[];
+    inspector: string='Click a tile to inspect it.';
+    selectedPlotId: number|null=null;
+    resizeTimer: Phaser.Time.TimerEvent|null=null;
     diceText: Phaser.GameObjects.Text|null=null;
     bannerText: Phaser.GameObjects.Text|null=null;
     ring: Phaser.GameObjects.Rectangle|null=null;
@@ -55,11 +58,15 @@ export class GameScene extends Phaser.Scene{
         this.ring.setDepth(5);
         this.ring.setVisible(false);
         this.tweens.add({targets: this.ring, alpha: 0.3, duration: 550, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'});
-        let startTile: Phaser.GameObjects.Rectangle|null=this.rects[0] as Phaser.GameObjects.Rectangle|null;
-        if(startTile!==undefined&&startTile!==null){
-            this.tweens.add({targets: startTile, alpha: 0.55, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'});
-        }
-        this.sharpen();
+        this.pulseStart();
+        this.scale.on('resize', ()=>{
+            if(this.resizeTimer!==null){
+                this.resizeTimer.remove();
+            }
+            this.resizeTimer=this.time.delayedCall(180, ()=>{
+                this.rebuildBoard();
+            });
+        });
         this.scene.launch('UIScene');
     }
     buildBackground(): void{
@@ -174,11 +181,20 @@ export class GameScene extends Phaser.Scene{
             let face: Phaser.GameObjects.Rectangle=this.add.rectangle(p.x, p.y, 88, 44, 0x0d0424, 0.94);
             face.setStrokeStyle(2, c, 1);
             this.rects[i]=face;
+            face.setInteractive({useHandCursor: true});
+            face.on('pointerdown', ()=>{
+                this.selectTile(i);
+            });
             this.add.rectangle(p.x, p.y-18, 88, 7, c, 1);
             let lt: Phaser.GameObjects.Text=this.add.text(p.x, p.y-4, '' + i + ' ' + labelForSpace(i), {fontFamily: FONT_BODY, fontSize: '18px', color: '#ffffff'});
             lt.setOrigin(0.5);
             if(lt.width>82){
-                lt.setScale(82/lt.width);
+                let mg: Phaser.GameObjects.Graphics=this.add.graphics();
+                mg.fillRect(p.x-43, p.y-22, 86, 44);
+                mg.setVisible(false);
+                lt.setMask(mg.createGeometryMask());
+                lt.x=p.x-41+lt.width/2;
+                this.tweens.add({targets: lt, x: p.x+41-lt.width/2, duration: Math.max(1400, lt.width*24), repeat: -1, repeatDelay: 900, ease: 'Linear'});
             }
             let o: Phaser.GameObjects.Text=this.add.text(p.x, p.y+12, '', {fontFamily: FONT_BODY, fontSize: '17px', color: '#ffd319'}).setOrigin(0.5);
             this.owners[i]=o;
@@ -338,44 +354,171 @@ export class GameScene extends Phaser.Scene{
     refreshBoard(): void{
         for(let i=0;i<40;i++){
             let o: Phaser.GameObjects.Text|null=this.owners[i] as Phaser.GameObjects.Text|null;
+            let fr: Phaser.GameObjects.Rectangle|null=this.rects[i] as Phaser.GameObjects.Rectangle|null;
             if(o===undefined||o===null){
                 continue;
             }
             let pl: PlotData|null=this.plotByBoard(i);
+            let s2: string='';
             if(pl===null){
-                o.setText('');
-                continue;
+                s2='';
             }
-            if(pl.constructionLevel<0){
-                o.setText('REMOVED');
-                continue;
+            else if(pl.constructionLevel<0){
+                s2='REMOVED';
             }
-            if(pl.ownerIndex===null){
-                o.setText('cost ' + pl.baseCost);
-                continue;
+            else if(pl.ownerIndex===null){
+                s2='' + pl.baseCost + ' CREDITS';
             }
-            let q: string='';
-            if(this.state.qualitiesRevealed||pl.ownerIndex===this.state.currentPlayerIndex){
-                if(pl.quality==='GOOD'){
-                    q=' G';
-                }
-                else if(pl.quality==='BAD'){
-                    q=' B';
-                }
-                else{
-                    q=' A';
-                }
+            else if(pl.isMortgaged){
+                s2='MORTGAGED';
+            }
+            else if(pl.constructionLevel===0){
+                s2='EMPTY LOT';
             }
             else{
-                q=' ?';
+                let st1: string='☆☆☆☆';
+                if(pl.constructionLevel===1){
+                    st1='★☆☆☆';
+                }
+                else if(pl.constructionLevel===2){
+                    st1='★★☆☆';
+                }
+                else if(pl.constructionLevel===3){
+                    st1='★★★☆';
+                }
+                else{
+                    st1='★★★★';
+                }
+                let qq: string='?';
+                if(this.state.qualitiesRevealed||pl.ownerIndex===this.state.currentPlayerIndex){
+                    if(pl.quality==='GOOD'){
+                        qq='GOOD';
+                    }
+                    else if(pl.quality==='BAD'){
+                        qq='BAD';
+                    }
+                    else{
+                        qq='AVERAGE';
+                    }
+                }
+                s2=st1 + ' ' + qq;
             }
-            let mort: string='';
-            if(pl.isMortgaged){
-                mort=' M';
+            o.setText(s2);
+            if(o.width>82){
+                o.setScale(82/o.width);
             }
-            o.setText('P' + (pl.ownerIndex+1) + ' L' + pl.constructionLevel + q + mort);
+            else{
+                o.setScale(1);
+            }
+            if(fr!==undefined&&fr!==null){
+                if(pl!==undefined&&pl!==null&&pl.ownerIndex!==null){
+                    fr.setStrokeStyle(3, TOKEN_COLORS[pl.ownerIndex % TOKEN_COLORS.length] as number, 1);
+                }
+                else{
+                    fr.setStrokeStyle(2, colorForSpace(i), 1);
+                }
+            }
         }
         this.placeTokens();
+    }
+    pulseStart(): void{
+        let s0: Phaser.GameObjects.Rectangle|null=this.rects[0] as Phaser.GameObjects.Rectangle|null;
+        if(s0!==undefined&&s0!==null){
+            this.tweens.add({targets: s0, alpha: 0.55, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'});
+        }
+    }
+    rebuildBoard(): void{
+        let dead: Array<Phaser.GameObjects.GameObject>=[];
+        for(let i=0;i<this.children.length;i++){
+            let k: Phaser.GameObjects.GameObject=this.children.getAt(i) as Phaser.GameObjects.GameObject;
+            let kd: Phaser.GameObjects.Components.Depth=k as unknown as Phaser.GameObjects.Components.Depth;
+            if(kd.depth<=0){
+                dead.push(k);
+            }
+        }
+        for(let i=0;i<dead.length;i++){
+            let d: Phaser.GameObjects.GameObject|undefined=dead[i];
+            if(d!==undefined){
+                this.tweens.killTweensOf(d);
+                d.destroy();
+            }
+        }
+        this.rects=[];
+        this.owners=[];
+        this.buildBackground();
+        this.renderBoardStatic();
+        this.pulseStart();
+        this.refreshBoard();
+    }
+    selectTile(boardIdx: number): void{
+        let st: GameState=this.state;
+        let pl: PlotData|null=this.plotByBoard(boardIdx);
+        if(pl!==null){
+            this.selectedPlotId=pl.id;
+            let who: string='UNOWNED';
+            if(pl.ownerIndex!==null){
+                let ow: PlayerData|undefined=st.players[pl.ownerIndex];
+                if(ow!==undefined){
+                    who='OWNED BY ' + ow.name.toUpperCase();
+                }
+            }
+            let lvlName: string='EMPTY LOT';
+            if(pl.constructionLevel===1){
+                lvlName='GATE';
+            }
+            else if(pl.constructionLevel===2){
+                lvlName='HALF-BUILT';
+            }
+            else if(pl.constructionLevel===3){
+                lvlName='TOWER';
+            }
+            else if(pl.constructionLevel===4){
+                lvlName='LUXURY';
+            }
+            else if(pl.constructionLevel<0){
+                lvlName='REMOVED';
+            }
+            let qual: string='QUALITY HIDDEN';
+            if(this.state.qualitiesRevealed||pl.ownerIndex===st.currentPlayerIndex){
+                if(pl.quality!==null){
+                    qual=pl.quality + ' QUALITY';
+                }
+            }
+            this.inspector='PLOT ' + pl.id + ' · ' + pl.name.toUpperCase() + ' · ' + pl.zone + ' ZONE · COSTS ' + pl.baseCost + ' CREDITS · ' + who + ' · LEVEL ' + pl.constructionLevel + ' ' + lvlName + ' · ' + qual + (pl.isMortgaged?' · MORTGAGED':'');
+        }
+        else{
+            this.inspector='SPACE ' + boardIdx + ' · ' + labelForSpace(boardIdx) + ' · ' + this.spaceHelp(boardIdx);
+        }
+        BGMPlayer.instance().click();
+        let fr: Phaser.GameObjects.Rectangle|null=this.rects[boardIdx] as Phaser.GameObjects.Rectangle|null;
+        if(fr!==undefined&&fr!==null){
+            this.tweens.add({targets: fr, scaleX: 1.1, scaleY: 1.12, duration: 110, yoyo: true});
+        }
+    }
+    spaceHelp(boardIdx: number): string{
+        let t: string=SPACE_TYPES[boardIdx] as string;
+        if(t==='START'){
+            return 'REST HERE. PASSING PAYS THE STIPEND.';
+        }
+        if(t==='HYPE'){
+            return 'DRAW A CARD OF THE CURRENT PHASE.';
+        }
+        if(t==='MAINTENANCE'){
+            return 'PAY ALL UPKEEP AT ONCE.';
+        }
+        if(t==='INVESTOR_PITCH'){
+            return 'EARN FOR YOUR HYPE. NOTHING IN A CRASH.';
+        }
+        if(t==='AUCTION'){
+            return 'A RANDOM FREE PLOT GOES UNDER THE HAMMER.';
+        }
+        if(t==='RUMOR'){
+            return 'A GLOBAL EVENT HITS EVERYONE.';
+        }
+        if(t==='BANK'){
+            return 'LOANS, REPAYMENTS, MORTGAGES, SALES.';
+        }
+        return 'TEAM UP OR BETRAY FOR PROFIT.';
     }
     rollAndMove(): void{
         if(this.stage!=='ROLL'){
@@ -1412,7 +1555,7 @@ export class GameScene extends Phaser.Scene{
         }
         this.refreshBoard();
     }
-    hudSnapshot(): {round: number, phase: Phase, bubble: number, cur: number, stage: TurnStage, msg: string, rate: number, stipend: number, roll: number, mustPay: number, pendingBuy: number|null, auction: AuctionState|null, joint: number|null, over: boolean, winner: number|null}{
-        return {round: this.state.roundNumber, phase: this.state.phase, bubble: this.state.bubbleMeter, cur: this.state.currentPlayerIndex, stage: this.stage, msg: this.statusMsg, rate: interestRateFor(this.state.phase, this.state.crashSeverity), stipend: stipendFor(this.state.phase), roll: this.lastRoll, mustPay: this.mustPay, pendingBuy: this.pendingBuyPlotId, auction: this.auction, joint: this.jointPartner, over: this.state.gameOver, winner: this.state.winnerIndex};
+    hudSnapshot(): {round: number, phase: Phase, bubble: number, cur: number, stage: TurnStage, msg: string, rate: number, stipend: number, roll: number, mustPay: number, pendingBuy: number|null, auction: AuctionState|null, joint: number|null, over: boolean, winner: number|null, inspector: string, selected: number|null}{
+        return {round: this.state.roundNumber, phase: this.state.phase, bubble: this.state.bubbleMeter, cur: this.state.currentPlayerIndex, stage: this.stage, msg: this.statusMsg, rate: interestRateFor(this.state.phase, this.state.crashSeverity), stipend: stipendFor(this.state.phase), roll: this.lastRoll, mustPay: this.mustPay, pendingBuy: this.pendingBuyPlotId, auction: this.auction, joint: this.jointPartner, over: this.state.gameOver, winner: this.state.winnerIndex, inspector: this.inspector, selected: this.selectedPlotId};
     }
 }
