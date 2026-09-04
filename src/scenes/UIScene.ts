@@ -17,7 +17,8 @@ const CSS: string=`.tsch-btn{font-family:'VT323',monospace;font-size:18px;backgr
 .tsch-msg{color:#ffd319;font-size:21px;min-height:24px;text-shadow:0 0 8px rgba(255,211,25,.6);}
 .tsch-due{color:#ff5b5b !important;text-shadow:0 0 10px #ff0000 !important;animation:tsch-blink .6s infinite;}
 .tsch-modal{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);background:rgba(13,4,36,.97);color:#fff;padding:18px;pointer-events:auto;border:3px solid #ff2e88;box-shadow:0 0 28px rgba(255,46,136,.75);font-family:'VT323',monospace;font-size:21px;max-width:380px;z-index:60;animation:tsch-pop .18s ease-out;}
-.tsch-rules{max-width:600px;max-height:78vh;overflow:auto;}
+.tsch-rules{max-width:640px;max-height:80vh;overflow:auto;top:50%;}
+.tsch-h{color:#ffd319;margin:12px 0 4px;font-size:22px;text-shadow:0 0 8px rgba(255,211,25,.6);}
 .tsch-title{font-family:'Press Start 2P',monospace;font-size:15px;color:#ffd319;text-shadow:0 0 10px #ff2e88;margin-bottom:10px;line-height:1.6;}
 .tsch-sub{color:#22d3ee;margin-bottom:8px;}
 .tsch-bubwrap{display:inline-block;width:100px;height:12px;border:1px solid #22d3ee;background:#0a0420;margin-left:6px;vertical-align:middle;}
@@ -263,10 +264,44 @@ export class UIScene extends Phaser.Scene{
         b.setAttribute('style', 'display:none;');
         r.appendChild(b);
         this.rulesBox=b;
-        this.el('div', '', b, '').className='tsch-title';
-        (b.children[0] as HTMLElement).textContent='HOW TO PLAY';
-        this.el('div', 'margin-bottom:8px;color:#ffd319;', b, 'LAST SOLVENT TYCOON WINS. 20 ROUNDS MAX.');
-        this.el('div', 'line-height:1.35;', b, 'ROLL 2d6, move, resolve the space. Passing START pays stipend (BOOM 5, COOLING 2, CRASH 0). END TURN pays upkeep (L1/L2 only) + bank interest + hype upkeep in CRASH. BROKE? Mortgage plots (50% value, debt rises), sell materials, or go BANKRUPT (assets freed, you are out). BUILD L1-L4 on owned plots (never mortgaged, never Gate 0, never in CRASH). COOLING x1.5 materials. DEFER borrows the credit cost. Unowned plots can be bought on landing. Finished towers (L3/L4) charge RENT; half-built hulks give visitors +1 HYPE. GATE 0 starts built, cannot upgrade, pays its owner +1 HYPE per turn, mortgages for 0, abandon pays +5 and removes it. BUBBLE: L1 +1, L2 +2, L3/L4 -2, repaying 5 credits -1. At 15 in COOLING everyone pays 2 or loses hype. At 20 the bubble bursts early (HARD). CRASH hits round 16 (random HARD/MEDIUM/SOFT): assets drop 80/50/30%, interest 5/3/2, hype upkeep 2/1/0.5. A second 20 ends everything. Highest net worth takes the ruins at round 20.');
+        let t0: HTMLElement=this.el('div', '', b, 'HOW TO PLAY');
+        t0.className='tsch-title';
+        let h0: HTMLElement=this.el('div', '', b, 'GOAL');
+        h0.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'LAST SOLVENT TYCOON WINS. 20 ROUNDS MAX. If several survive round 20, the highest net worth wins: credits minus debt, plus materials, plus plot values. The bank always wins more.');
+        let h1: HTMLElement=this.el('div', '', b, 'YOUR TURN');
+        h1.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, '1 ROLL [R]: move 2d6 spaces clockwise. Passing START pays the stipend. 2 RESOLVE the space you land on. 3 ACT: build, mortgage, use the bank, bid in auctions, pick joint partners. 4 END [E]: pay all bills. Short on cash? Mortgage plots, sell materials, then PAY DUE. Nothing left? Go BANKRUPT.');
+        let h2: HTMLElement=this.el('div', '', b, 'STIPEND');
+        h2.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'Every time you pass START: +5 credits in BOOM, +2 in COOLING, +0 in CRASH. Landing exactly on START just rests.');
+        let h3: HTMLElement=this.el('div', '', b, 'BILLS (END TURN)');
+        h3.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'Upkeep for every unfinished plot (levels 1-2 only) + bank interest + hype upkeep in CRASH. Interest = floor(debt x rate / 10). Rates: BOOM 1, COOLING 2, CRASH 5 / 3 / 2 for HARD / MEDIUM / SOFT. Upkeep L1/L2: BOOM 1/2, COOLING 2/4, CRASH HARD 3/6, MEDIUM 2/4, SOFT 1/2. GOOD plots -1 upkeep, BAD plots +1. Hype upkeep = your hype x 2 / 1 / 0.5, rounded up.');
+        let h4: HTMLElement=this.el('div', '', b, 'BUILDING');
+        h4.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'Build on any plot you own: L1 Gate costs 1 concrete + 1 steel + 2 credits. L2 Half-Built costs 2 concrete + 2 steel + 1 glass + 5 credits. L3 Tower costs 2 concrete + 2 steel + 2 glass + 8 credits. L4 Luxury costs 3 concrete + 3 steel + 3 glass + 12 credits. COOLING multiplies materials x1.5 (rounded up). DEFER borrows the credit part from the bank. Never on mortgaged plots, never on Gate 0, never during CRASH.');
+        let h5: HTMLElement=this.el('div', '', b, 'RENT AND QUALITY');
+        h5.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'Finished towers charge visitors RENT: L3 = 6, L4 = 12, times 1.5 for GOOD, 1.0 for AVERAGE, 0.5 for BAD plots. Unfinished hulks charge nothing and give the visitor +1 HYPE instead. Gate 0 starts built, cannot be upgraded, pays its owner +1 HYPE every turn, mortgages for 0, and abandoning it pays +5 and removes it forever.');
+        let h6: HTMLElement=this.el('div', '', b, 'BUBBLE METER');
+        h6.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'Building L1 adds +1, L2 adds +2, finishing L3 or L4 removes 2. Repaying 5+ credits removes 1 per 5. At 15 during COOLING everyone pays 2 credits or loses 1 hype. At 20 the bubble bursts into an early HARD crash. A second 20 after the crash ends everything instantly and the richest ruin wins.');
+        let h7: HTMLElement=this.el('div', '', b, 'THE CRASH');
+        h7.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'Strikes at round 16 unless the bubble bursts first. Severity is drawn: 40% HARD, 35% MEDIUM, 25% SOFT. Plot values drop 80% / 50% / 30%. Interest becomes 5 / 3 / 2 per 10 credits of debt. Every hype costs 2 / 1 / 0.5 credits per turn. Stipend is 0 and building is over. Qualities are public from round 11 on.');
+        let h8: HTMLElement=this.el('div', '', b, 'SPACES');
+        h8.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'PLOT: buy it for base price if free, pay rent if finished, gain hype if half-built. HYPE: draw a card of the current phase. MAINT: pay all upkeep immediately. PITCH: gain floor(hype / 2) credits, or lose 1 hype in CRASH. AUCTION: a random free plot goes clockwise from you, minimum = base price, pass anytime. RUMOR: a global event hits every player. BANK: loans of 1-20, repay debt, mortgage and lift, sell materials. JOINT: pick a partner, both secretly pick COOP or DEFECT.');
+        let h9: HTMLElement=this.el('div', '', b, 'JOINT VENTURE PAYOFFS');
+        h9.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'Both COOP: +3 credits and +1 hype each. Both DEFECT: -1 credit and -1 hype each. You DEFECT: +5 credits and +2 hype for you, partner pays 2 credits and loses 1 material. You COOP alone: the reverse. Every venture adds +1 bubble. Declining costs 1 hype.');
+        let h10: HTMLElement=this.el('div', '', b, 'MORTGAGE AND DEBT');
+        h10.className='tsch-h';
+        this.el('div', 'line-height:1.35;', b, 'Mortgaging pays 50% of market value (already crash-adjusted) but adds the same amount to your bank debt. Lift it by repaying the mortgage. Materials sell for 0.5 credits each (0.25 in CRASH). Bank loans of 1-20 anytime. Repay debt anytime to cut interest and calm the bubble.');
+        let h11: HTMLElement=this.el('div', '', b, 'BANKRUPTCY');
+        h11.className='tsch-h';
+        this.el('div', 'line-height:1.35;margin-bottom:8px;', b, 'Your plots return to the market, your stats are zeroed, your debts die with you, and you are out. The others keep playing. Last solvent tycoon takes the city.');
         this.btn('CLOSE', b, ()=>{this.showRules(false);});
     }
     showRules(v: boolean): void{
@@ -283,7 +318,7 @@ export class UIScene extends Phaser.Scene{
         if(this.topBar!==null){
             this.topBar.textContent='';
             let info: HTMLElement=document.createElement('span');
-            info.textContent='RD ' + s.round + '/20 | ' + s.phase + ' | BUB ' + s.bubble + ' | P' + (s.cur+1) + ' | ' + s.stage + ' | INT ' + s.rate + '/10 | STIP ' + s.stipend + ' | DICE ' + s.roll + (s.mustPay>0?' | !! DUE ' + s.mustPay + ' !!':'');
+            info.textContent='RD ' + s.round + '/20 | ' + s.phase + ' | BUB ' + s.bubble + ' | P' + (s.cur+1) + ' | ' + s.stage + ' | INT ' + s.rate + '/10 | STIP ' + s.stipend + ' | DICE ' + s.roll;
             this.topBar.appendChild(info);
             let wrap: HTMLElement=document.createElement('span');
             wrap.className='tsch-bubwrap';
@@ -299,6 +334,9 @@ export class UIScene extends Phaser.Scene{
             rb.className='tsch-btn';
             rb.addEventListener('click', ()=>{this.showRules(true);});
             this.topBar.appendChild(rb);
+            if(this.plist!==null){
+                this.plist.style.top=this.topBar.offsetHeight + 'px';
+            }
         }
         if(this.plist!==null){
             this.plist.textContent='';
