@@ -16,6 +16,9 @@ export class PreloadScene extends Phaser.Scene{
         }
     }
     create(): void{
+        this.scale.on('resize', ()=>{
+            this.scene.restart();
+        });
         let w: number=this.scale.width;
         let h: number=this.scale.height;
         let cx: number=w/2;
