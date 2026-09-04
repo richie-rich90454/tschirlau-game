@@ -3,7 +3,7 @@ import Phaser from 'phaser';
 import type {GameScene} from './GameScene.ts';
 import {TOKEN_COLORS} from './GameScene.ts';
 import {BGMPlayer} from '../utils/BGMPlayer.ts';
-const CSS: string=`.tsch-btn{font-family:'VT323',monospace;font-size:18px;background:#12082e;color:#fff;border:2px solid #22d3ee;padding:3px 10px;margin:2px;cursor:pointer;text-shadow:0 0 6px #22d3ee;box-shadow:0 0 8px rgba(34,211,238,.45),inset 0 0 8px rgba(34,211,238,.15);transition:transform .08s,box-shadow .12s;}
+const CSS: string=`.tsch-btn{font-family:'VT323',monospace;font-size:20px;background:#12082e;color:#fff;border:2px solid #22d3ee;padding:5px 12px;margin:2px;cursor:pointer;text-shadow:0 0 6px #22d3ee;box-shadow:0 0 8px rgba(34,211,238,.45),inset 0 0 8px rgba(34,211,238,.15);transition:transform .08s,box-shadow .12s;}
 .tsch-btn:hover:not(:disabled){box-shadow:0 0 16px rgba(34,211,238,.9),inset 0 0 10px rgba(34,211,238,.3);transform:translateY(-1px);}
 .tsch-btn:active:not(:disabled){transform:scale(.95);}
 .tsch-btn:disabled{opacity:.30;cursor:default;box-shadow:none;text-shadow:none;}
@@ -13,8 +13,13 @@ const CSS: string=`.tsch-btn{font-family:'VT323',monospace;font-size:18px;backgr
 .tsch-cards{background:rgba(10,4,32,.93) !important;border-bottom:2px solid #b026ff !important;box-shadow:0 2px 14px rgba(176,38,255,.45) !important;font-family:'VT323',monospace !important;display:flex !important;gap:8px !important;padding:4px 10px !important;flex-wrap:wrap !important;}
 .tsch-card{border:1px solid #444466;padding:0 8px;min-width:150px;line-height:1.05;}
 .tsch-card-cur{border-color:#ffd319 !important;box-shadow:0 0 12px rgba(255,211,25,.65);}
+.tsch-group{border:1px solid #444466;padding:4px 6px;display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
+.tsch-glabel{width:100%;font-size:15px;color:#ff71ce;letter-spacing:3px;}
+.tsch-insp{color:#22d3ee;font-size:21px;min-height:24px;white-space:nowrap;overflow:hidden;text-shadow:0 0 8px rgba(34,211,238,.6);}
+.tsch-marq{animation:tsch-slide 7s linear infinite alternate;}
+@keyframes tsch-slide{0%{transform:translateX(0);}100%{transform:translateX(var(--tsch-shift,0px));}}
 .tsch-bot{background:linear-gradient(0deg,#0a0420,#1a0533) !important;border-top:2px solid #22d3ee !important;box-shadow:0 -2px 18px rgba(34,211,238,.4) !important;font-family:'VT323',monospace !important;}
-.tsch-msg{color:#ffd319;font-size:21px;min-height:24px;text-shadow:0 0 8px rgba(255,211,25,.6);}
+.tsch-msg{color:#ffd319;font-size:21px;min-height:24px;white-space:nowrap;overflow:hidden;text-shadow:0 0 8px rgba(255,211,25,.6);}
 .tsch-due{color:#ff5b5b !important;text-shadow:0 0 10px #ff0000 !important;animation:tsch-blink .6s infinite;}
 .tsch-modal{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);background:rgba(13,4,36,.97);color:#fff;padding:18px;pointer-events:auto;border:3px solid #ff2e88;box-shadow:0 0 28px rgba(255,46,136,.75);font-family:'VT323',monospace;font-size:21px;max-width:380px;z-index:60;animation:tsch-pop .18s ease-out;}
 .tsch-rules{max-width:640px;max-height:80vh;overflow:auto;top:50%;}
@@ -34,6 +39,7 @@ export class UIScene extends Phaser.Scene{
     topBar: HTMLElement|null=null;
     plist: HTMLElement|null=null;
     msg: HTMLElement|null=null;
+    insp: HTMLElement|null=null;
     btns: Record<string, HTMLButtonElement>={};
     setupBox: HTMLElement|null=null;
     buyBox: HTMLElement|null=null;
@@ -70,6 +76,13 @@ export class UIScene extends Phaser.Scene{
         this.input.keyboard?.on('keydown-R', ()=>{key('roll');});
         this.input.keyboard?.on('keydown-E', ()=>{key('end');});
         this.input.keyboard?.on('keydown-M', ()=>{this.toggleBgm(this.btns['bgm'] as HTMLButtonElement);});
+        this.input.keyboard?.on('keydown-B', ()=>{
+            if(!(this.btns['build'] as HTMLButtonElement).disabled){
+                let s2: HTMLSelectElement=this.buildSel as HTMLSelectElement;
+                let d2: HTMLInputElement=this.deferBox as HTMLInputElement;
+                this.g().buildOn(parseInt(s2.value, 10), d2.checked);
+            }
+        });
         this.refresh();
     }
     injectCss(): void{
@@ -118,73 +131,98 @@ export class UIScene extends Phaser.Scene{
         m.className='tsch-msg';
         bot.appendChild(m);
         this.msg=m;
+        let insp: HTMLElement=document.createElement('div');
+        insp.className='tsch-insp';
+        insp.textContent='Click a tile to inspect it.';
+        bot.appendChild(insp);
+        this.insp=insp;
         let row: HTMLElement=document.createElement('div');
-        row.setAttribute('style', 'display:flex;gap:4px;flex-wrap:wrap;align-items:center;');
+        row.setAttribute('style', 'display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;');
         bot.appendChild(row);
-        this.btns['roll']=this.btn('ROLL [R]', row, ()=>{this.g().rollAndMove();});
-        this.btns['pay']=this.btn('PAY DUE', row, ()=>{this.g().payDue();});
-        this.btns['end']=this.btn('END [E]', row, ()=>{this.g().endTurn();});
-        this.btns['bankrupt']=this.btn('BANKRUPT', row, ()=>{this.g().declareBankruptcy();});
+        let gRoll: HTMLElement=document.createElement('div');
+        gRoll.className='tsch-group';
+        row.appendChild(gRoll);
+        this.glabel(gRoll, 'DICE');
+        this.btns['roll']=this.btn('ROLL DICE [R]', gRoll, ()=>{this.g().rollAndMove();});
+        this.btns['pay']=this.btn('PAY AMOUNT DUE', gRoll, ()=>{this.g().payDue();});
+        let gTurn: HTMLElement=document.createElement('div');
+        gTurn.className='tsch-group';
+        row.appendChild(gTurn);
+        this.glabel(gTurn, 'TURN');
+        this.btns['end']=this.btn('END TURN [E]', gTurn, ()=>{this.g().endTurn();});
+        this.btns['bankrupt']=this.btn('DECLARE BANKRUPTCY', gTurn, ()=>{this.g().declareBankruptcy();});
+        let gBuild: HTMLElement=document.createElement('div');
+        gBuild.className='tsch-group';
+        row.appendChild(gBuild);
+        this.glabel(gBuild, 'BUILD');
         let bs: HTMLSelectElement=document.createElement('select');
         bs.className='tsch-in';
-        row.appendChild(bs);
+        gBuild.appendChild(bs);
         this.buildSel=bs;
         let dl: HTMLElement=document.createElement('label');
         dl.setAttribute('style', 'font-size:17px;color:#ff71ce;');
-        row.appendChild(dl);
+        gBuild.appendChild(dl);
         let dc: HTMLInputElement=document.createElement('input');
         dc.type='checkbox';
         dl.appendChild(dc);
-        dl.appendChild(document.createTextNode('defer'));
+        dl.appendChild(document.createTextNode('defer payment'));
         this.deferBox=dc;
-        this.btns['build']=this.btn('BUILD', row, ()=>{
+        this.btns['build']=this.btn('BUILD LEVEL [B]', gBuild, ()=>{
             let s: HTMLSelectElement=this.buildSel as HTMLSelectElement;
             let d: HTMLInputElement=this.deferBox as HTMLInputElement;
             this.g().buildOn(parseInt(s.value, 10), d.checked);
         });
-        this.btns['mort']=this.btn('MORTGAGE', row, ()=>{
+        this.btns['mort']=this.btn('MORTGAGE', gBuild, ()=>{
             let s: HTMLSelectElement=this.buildSel as HTMLSelectElement;
             this.g().mortgagePlot(parseInt(s.value, 10));
         });
-        this.btns['unmort']=this.btn('LIFT MORT', row, ()=>{
+        this.btns['unmort']=this.btn('LIFT MORTGAGE', gBuild, ()=>{
             let s: HTMLSelectElement=this.buildSel as HTMLSelectElement;
             this.g().repayMortgage(parseInt(s.value, 10));
         });
-        this.btns['abandon']=this.btn('ABANDON GATE', row, ()=>{this.g().abandonGrandGate();});
+        this.btns['abandon']=this.btn('ABANDON GATE', gBuild, ()=>{this.g().abandonGrandGate();});
+        let gBank: HTMLElement=document.createElement('div');
+        gBank.className='tsch-group';
+        row.appendChild(gBank);
+        this.glabel(gBank, 'BANK');
         let li: HTMLInputElement=document.createElement('input');
-        li.placeholder='loan 1-20';
+        li.placeholder='loan 1 to 20';
         li.className='tsch-in';
-        li.setAttribute('style', 'width:80px;');
-        row.appendChild(li);
+        li.setAttribute('style', 'width:110px;');
+        gBank.appendChild(li);
         this.loanIn=li;
-        this.btns['loan']=this.btn('LOAN', row, ()=>{this.g().takeLoan(parseInt((this.loanIn as HTMLInputElement).value || '0', 10));});
+        this.btns['loan']=this.btn('TAKE LOAN', gBank, ()=>{this.g().takeLoan(parseInt((this.loanIn as HTMLInputElement).value || '0', 10));});
         let ri: HTMLInputElement=document.createElement('input');
-        ri.placeholder='repay N';
+        ri.placeholder='repayment amount';
         ri.className='tsch-in';
-        ri.setAttribute('style', 'width:80px;');
-        row.appendChild(ri);
+        ri.setAttribute('style', 'width:130px;');
+        gBank.appendChild(ri);
         this.repayIn=ri;
-        this.btns['repay']=this.btn('REPAY', row, ()=>{this.g().repayDebt(parseInt((this.repayIn as HTMLInputElement).value || '0', 10));});
-        this.btns['sellC']=this.btn('SELL C', row, ()=>{this.g().sellMaterial('concrete', 1);});
-        this.btns['sellS']=this.btn('SELL S', row, ()=>{this.g().sellMaterial('steel', 1);});
-        this.btns['sellG']=this.btn('SELL G', row, ()=>{this.g().sellMaterial('glass', 1);});
+        this.btns['repay']=this.btn('REPAY DEBT', gBank, ()=>{this.g().repayDebt(parseInt((this.repayIn as HTMLInputElement).value || '0', 10));});
+        this.btns['sellC']=this.btn('SELL CONCRETE', gBank, ()=>{this.g().sellMaterial('concrete', 1);});
+        this.btns['sellS']=this.btn('SELL STEEL', gBank, ()=>{this.g().sellMaterial('steel', 1);});
+        this.btns['sellG']=this.btn('SELL GLASS', gBank, ()=>{this.g().sellMaterial('glass', 1);});
+        let gDeal: HTMLElement=document.createElement('div');
+        gDeal.className='tsch-group';
+        row.appendChild(gDeal);
+        this.glabel(gDeal, 'DEALS');
         let bi: HTMLInputElement=document.createElement('input');
-        bi.placeholder='bid N';
+        bi.placeholder='bid amount';
         bi.className='tsch-in';
-        bi.setAttribute('style', 'width:64px;');
-        row.appendChild(bi);
+        bi.setAttribute('style', 'width:100px;');
+        gDeal.appendChild(bi);
         this.bidIn=bi;
-        this.btns['bid']=this.btn('BID', row, ()=>{this.g().placeBid(parseInt((this.bidIn as HTMLInputElement).value || '0', 10));});
-        this.btns['pass']=this.btn('PASS', row, ()=>{this.g().passBid();});
+        this.btns['bid']=this.btn('PLACE BID', gDeal, ()=>{this.g().placeBid(parseInt((this.bidIn as HTMLInputElement).value || '0', 10));});
+        this.btns['pass']=this.btn('PASS BID', gDeal, ()=>{this.g().passBid();});
         let js: HTMLSelectElement=document.createElement('select');
         js.className='tsch-in';
-        js.setAttribute('style', 'max-width:120px;');
-        row.appendChild(js);
+        js.setAttribute('style', 'max-width:150px;');
+        gDeal.appendChild(js);
         this.jointSel=js;
-        this.btns['joint']=this.btn('JOINT?', row, ()=>{this.g().startJoint(parseInt((this.jointSel as HTMLSelectElement).value || '0', 10));});
-        this.btns['coop']=this.btn('COOP', row, ()=>{this.jointPick('C');});
-        this.btns['defect']=this.btn('DEFECT', row, ()=>{this.jointPick('D');});
-        this.btns['declineJ']=this.btn('NO JOINT', row, ()=>{this.g().declineJoint();});
+        this.btns['joint']=this.btn('START JOINT VENTURE', gDeal, ()=>{this.g().startJoint(parseInt((this.jointSel as HTMLSelectElement).value || '0', 10));});
+        this.btns['coop']=this.btn('COOPERATE', gDeal, ()=>{this.jointPick('C');});
+        this.btns['defect']=this.btn('DEFECT', gDeal, ()=>{this.jointPick('D');});
+        this.btns['declineJ']=this.btn('DECLINE VENTURE', gDeal, ()=>{this.g().declineJoint();});
         let bg: HTMLButtonElement=this.btn('BGM: OFF', top, ()=>{this.toggleBgm(bg);});
         this.btns['bgm']=bg;
         this.btn('RULES', top, ()=>{this.showRules(true);});
@@ -309,6 +347,25 @@ export class UIScene extends Phaser.Scene{
             this.rulesBox.style.display=v?'block':'none';
         }
     }
+    glabel(parent: HTMLElement, text: string): void{
+        let l: HTMLElement=document.createElement('div');
+        l.className='tsch-glabel';
+        l.textContent=text;
+        parent.appendChild(l);
+    }
+    marq(e: HTMLElement|null): void{
+        if(e===null){
+            return;
+        }
+        let d: number=e.clientWidth-e.scrollWidth;
+        if(d<-4){
+            e.style.setProperty('--tsch-shift', '' + d + 'px');
+            e.classList.add('tsch-marq');
+        }
+        else{
+            e.classList.remove('tsch-marq');
+        }
+    }
     refresh(): void{
         if(this.game2===null){
             return;
@@ -318,7 +375,12 @@ export class UIScene extends Phaser.Scene{
         if(this.topBar!==null){
             this.topBar.textContent='';
             let info: HTMLElement=document.createElement('span');
-            info.textContent='RD ' + s.round + '/20 | ' + s.phase + ' | BUB ' + s.bubble + ' | P' + (s.cur+1) + ' | ' + s.stage + ' | INT ' + s.rate + '/10 | STIP ' + s.stipend + ' | DICE ' + s.roll;
+            let pname: string='NOBODY';
+            let pp: (typeof gs.state.players)[number]|undefined=gs.state.players[s.cur];
+            if(pp!==undefined){
+                pname=(pp as {name: string}).name.toUpperCase();
+            }
+            info.textContent='ROUND ' + s.round + ' OF 20 · ' + s.phase + ' · BUBBLE ' + s.bubble + ' · ' + pname + ' TO MOVE · ' + s.stage + ' · INTEREST ' + s.rate + ' PER 10 · STIPEND ' + s.stipend + ' · LAST ROLL ' + s.roll;
             this.topBar.appendChild(info);
             let wrap: HTMLElement=document.createElement('span');
             wrap.className='tsch-bubwrap';
@@ -348,12 +410,17 @@ export class UIScene extends Phaser.Scene{
                 this.plist.appendChild(card);
                 let head: HTMLElement=this.el('div', 'font-size:20px;color:' + hex + ';' + (i===s.cur?'text-shadow:0 0 10px ' + hex + ';':''), card, '');
                 head.textContent=(i===s.cur?'> ':'') + p.name + (p.isBankrupt?' X BANKRUPT':'');
-                this.el('div', 'color:#c9c9e3;font-size:17px;', card, '' + p.credits + 'CR DEBT' + p.debtToBank + ' H' + p.hype + ' C' + p.concrete + ' S' + p.steel + ' G' + p.glass + ' @' + p.position + ' PLOTS' + p.ownedPlots.length);
+                this.el('div', 'color:#c9c9e3;font-size:17px;', card, '' + p.credits + ' CREDITS · DEBT ' + p.debtToBank + ' · HYPE ' + p.hype + ' · CONCRETE ' + p.concrete + ' · STEEL ' + p.steel + ' · GLASS ' + p.glass + ' · SPACE ' + p.position + ' · PLOTS ' + p.ownedPlots.length);
             }
         }
         if(this.msg!==null){
             this.msg.textContent=s.msg;
             this.msg.className='tsch-msg' + (s.mustPay>0?' tsch-due':'');
+            this.marq(this.msg);
+        }
+        if(this.insp!==null){
+            this.insp.textContent=s.inspector;
+            this.marq(this.insp);
         }
         let canAct: boolean=s.stage==='ACTION'&&!s.over;
         let canRoll: boolean=s.stage==='ROLL'&&!s.over;
@@ -391,6 +458,10 @@ export class UIScene extends Phaser.Scene{
                 if(ok){
                     sel.value=cur;
                 }
+                if(s.selected!==null){
+                    sel.value='' + s.selected;
+                    this.g().selectedPlotId=null;
+                }
             }
         }
         if(this.jointSel!==null){
@@ -419,7 +490,8 @@ export class UIScene extends Phaser.Scene{
                 bb.style.display='block';
                 bb.textContent='';
                 this.el('div', '', bb, '').className='tsch-title';
-                (bb.children[0] as HTMLElement).textContent='BUY ' + (pl as {name: string}).name + ' FOR ' + (pl as {baseCost: number}).baseCost + ' CR?';
+                (bb.children[0] as HTMLElement).textContent='BUY ' + (pl as {name: string}).name + ' FOR ' + (pl as {baseCost: number}).baseCost + ' CREDITS?';
+                this.el('div', 'margin-bottom:8px;', bb, (pl as {zone: string}).zone + ' ZONE · LEVEL 0 EMPTY LOT');
                 this.btn('YES', bb, ()=>{gs.confirmBuy();});
                 this.btn('NO', bb, ()=>{gs.declineBuy();});
             }
@@ -435,7 +507,21 @@ export class UIScene extends Phaser.Scene{
                 bb.textContent='';
                 this.el('div', '', bb, '').className='tsch-title';
                 (bb.children[0] as HTMLElement).textContent='AUCTION ' + (pl as {name: string}).name;
-                this.el('div', 'margin-bottom:8px;', bb, 'TOP ' + (s.auction as {bid: number}).bid + ' BY P' + (((s.auction as {bidder: number|null}).bidder??-1)+1) + ' - TURN P' + ((s.auction as {turn: number}).turn+1) + '. BID OR PASS.');
+                let ab: string='NO BIDS YET';
+                let auB: number|null=(s.auction as {bidder: number|null}).bidder;
+                if(auB!==null){
+                    let bp2: (typeof gs.state.players)[number]|undefined=gs.state.players[auB];
+                    if(bp2!==undefined){
+                        ab=(bp2 as {name: string}).name.toUpperCase();
+                    }
+                }
+                let at: string='';
+                let auT: number=(s.auction as {turn: number}).turn;
+                let tp: (typeof gs.state.players)[number]|undefined=gs.state.players[auT];
+                if(tp!==undefined){
+                    at=(tp as {name: string}).name.toUpperCase();
+                }
+                this.el('div', 'margin-bottom:8px;', bb, 'TOP BID ' + (s.auction as {bid: number}).bid + ' CREDITS BY ' + ab + ' · TURN: ' + at + ' · PLACE A BID OR PASS.');
             }
             else{
                 bb.style.display='none';
