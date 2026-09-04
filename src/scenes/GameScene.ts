@@ -45,7 +45,7 @@ export class GameScene extends Phaser.Scene{
         this.diceText.setDepth(30);
         this.diceText.setStroke('#ff2e88', 6);
         this.diceText.setVisible(false);
-        this.bannerText=this.add.text(this.scale.width/2, this.scale.height/2-130, '', {fontFamily: FONT_DISPLAY, fontSize: '24px', color: '#22d3ee', align: 'center'});
+        this.bannerText=this.add.text(this.scale.width/2, this.scale.height/2-130, '', {fontFamily: FONT_DISPLAY, fontSize: '24px', color: '#22d3ee', align: 'center', wordWrap: {width: 940}});
         this.bannerText.setOrigin(0.5);
         this.bannerText.setDepth(30);
         this.bannerText.setStroke('#05010f', 6);
@@ -59,6 +59,7 @@ export class GameScene extends Phaser.Scene{
         if(startTile!==undefined&&startTile!==null){
             this.tweens.add({targets: startTile, alpha: 0.55, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'});
         }
+        this.sharpen();
         this.scene.launch('UIScene');
     }
     buildBackground(): void{
@@ -98,6 +99,7 @@ export class GameScene extends Phaser.Scene{
         t.setOrigin(0.5);
         t.setDepth(40);
         t.setStroke('#05010f', 4);
+        t.setResolution(2);
         this.tweens.add({targets: t, y: y-48, alpha: 0, duration: 950, ease: 'Cubic.easeOut', onComplete: ()=>{
             t.destroy();
         }});
@@ -127,6 +129,15 @@ export class GameScene extends Phaser.Scene{
                 }});
             });
         }});
+    }
+    sharpen(): void{
+        let kids: Array<Phaser.GameObjects.GameObject>=this.children.list;
+        for(let i=0;i<kids.length;i++){
+            let k: Phaser.GameObjects.GameObject|undefined=kids[i];
+            if(k instanceof Phaser.GameObjects.Text){
+                k.setResolution(2);
+            }
+        }
     }
     makeTokenTexture(i: number): string{
         let key: string='token' + i;
@@ -164,10 +175,15 @@ export class GameScene extends Phaser.Scene{
             face.setStrokeStyle(2, c, 1);
             this.rects[i]=face;
             this.add.rectangle(p.x, p.y-18, 88, 7, c, 1);
-            this.add.text(p.x, p.y-4, '' + i + ' ' + labelForSpace(i), {fontFamily: FONT_BODY, fontSize: '18px', color: '#ffffff'}).setOrigin(0.5);
+            let lt: Phaser.GameObjects.Text=this.add.text(p.x, p.y-4, '' + i + ' ' + labelForSpace(i), {fontFamily: FONT_BODY, fontSize: '18px', color: '#ffffff'});
+            lt.setOrigin(0.5);
+            if(lt.width>82){
+                lt.setScale(82/lt.width);
+            }
             let o: Phaser.GameObjects.Text=this.add.text(p.x, p.y+12, '', {fontFamily: FONT_BODY, fontSize: '17px', color: '#ffd319'}).setOrigin(0.5);
             this.owners[i]=o;
         }
+        this.sharpen();
     }
     setupGame(n: number): void{
         if(n<2){
