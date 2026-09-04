@@ -3,24 +3,24 @@ import Phaser from 'phaser';
 import type {GameScene} from './GameScene.ts';
 import {TOKEN_COLORS} from './GameScene.ts';
 import {BGMPlayer} from '../utils/BGMPlayer.ts';
-const CSS: string=`.tsch-btn{font-family:'Noto Sans Mono',monospace;font-size:20px;background:#12082e;color:#fff;border:2px solid #22d3ee;padding:5px 12px;margin:2px;cursor:pointer;font-weight:700;text-shadow:0 0 6px #22d3ee;box-shadow:0 0 8px rgba(34,211,238,.45),inset 0 0 8px rgba(34,211,238,.15);transition:transform .08s,box-shadow .12s;}
+const CSS: string=`.tsch-btn{font-family:'Noto Sans Mono',monospace;font-size:16px;background:#12082e;color:#fff;border:2px solid #22d3ee;padding:4px 8px;margin:2px;cursor:pointer;font-weight:700;white-space:nowrap;text-shadow:0 0 6px #22d3ee;box-shadow:0 0 8px rgba(34,211,238,.45),inset 0 0 8px rgba(34,211,238,.15);transition:transform .08s,box-shadow .12s;}
 .tsch-btn:hover:not(:disabled){box-shadow:0 0 16px rgba(34,211,238,.9),inset 0 0 10px rgba(34,211,238,.3);transform:translateY(-1px);}
 .tsch-btn:active:not(:disabled){transform:scale(.95);}
 .tsch-btn:disabled{opacity:.30;cursor:default;box-shadow:none;text-shadow:none;}
 .tsch-glow{border-color:#ffd319 !important;text-shadow:0 0 8px #ffd319 !important;box-shadow:0 0 18px rgba(255,211,25,.85) !important;animation:tsch-blink 1s infinite;}
-.tsch-in{font-family:'Noto Sans Mono',monospace;font-size:17px;background:#0a0420;color:#ffd319;border:2px solid #b026ff;margin:2px;padding:2px 6px;max-width:150px;}
+.tsch-in{font-family:'Noto Sans Mono',monospace;font-size:15px;background:#0a0420;color:#ffd319;border:2px solid #b026ff;margin:2px;padding:2px 6px;max-width:150px;}
 .tsch-top{background:linear-gradient(180deg,#0a0420,#1a0533) !important;border-bottom:2px solid #ff2e88 !important;box-shadow:0 2px 18px rgba(255,46,136,.5) !important;font-family:'Noto Sans Mono',monospace !important;font-size:21px !important;color:#fff !important;text-shadow:0 0 8px #22d3ee !important;}
 .tsch-cards{background:rgba(10,4,32,.93) !important;border-bottom:2px solid #b026ff !important;box-shadow:0 2px 14px rgba(176,38,255,.45) !important;font-family:'Noto Sans Mono',monospace !important;display:flex !important;gap:8px !important;padding:4px 10px !important;flex-wrap:wrap !important;}
-.tsch-card{border:1px solid #444466;padding:0 8px;min-width:150px;line-height:1.05;}
+.tsch-card{border:1px solid #444466;padding:0 8px;min-width:0;line-height:1.25;overflow-wrap:normal;}
 .tsch-card-cur{border-color:#ffd319 !important;box-shadow:0 0 12px rgba(255,211,25,.65);}
 .tsch-tab{opacity:0.75;}
 .tsch-tabon{opacity:1 !important;border-color:#ffd319 !important;text-shadow:0 0 8px #ffd319 !important;box-shadow:0 0 14px rgba(255,211,25,.7) !important;}
 .tsch-tabpage{width:100%;}
-.tsch-side{position:absolute;top:40px;bottom:34px;width:250px;background:rgba(10,4,32,.94);border:2px solid #b026ff;box-shadow:0 0 16px rgba(176,38,255,.5);overflow-y:auto;padding:8px;pointer-events:auto;}
-.tsch-right{right:6px;width:270px;border-color:#22d3ee;box-shadow:0 0 16px rgba(34,211,238,.5);}
+.tsch-side{position:absolute;top:40px;bottom:34px;width:210px;background:rgba(10,4,32,.94);border:2px solid #b026ff;box-shadow:0 0 16px rgba(176,38,255,.5);overflow-y:auto;padding:8px;pointer-events:auto;}
+.tsch-right{right:6px;width:230px;border-color:#22d3ee;box-shadow:0 0 16px rgba(34,211,238,.5);}
 .tsch-left{left:6px;}
 .tsch-group{border:1px solid #444466;padding:4px 6px;display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
-.tsch-glabel{width:100%;font-size:15px;color:#ff71ce;letter-spacing:3px;}
+.tsch-glabel{width:100%;font-size:13px;color:#ff71ce;letter-spacing:3px;}
 .tsch-insp{color:#22d3ee;font-size:21px;min-height:24px;white-space:nowrap;overflow:hidden;text-shadow:0 0 8px rgba(34,211,238,.6);}
 .tsch-marq{animation:tsch-slide 7s linear infinite alternate;}
 @keyframes tsch-slide{0%{transform:translateX(0);}100%{transform:translateX(var(--tsch-shift,0px));}}
@@ -514,11 +514,11 @@ export class UIScene extends Phaser.Scene{
             let gc: HTMLElement=document.createElement('div');
             gc.className='tsch-card';
             this.plist.appendChild(gc);
-            this.el('div', 'font-size:20px;color:#ffd319;', gc, 'ROUND ' + s.round + ' OF 20 · ' + s.phase);
+            this.el('div', 'font-size:17px;color:#ffd319;', gc, 'ROUND ' + s.round + ' OF 20 · ' + s.phase);
             let grow: HTMLElement=document.createElement('div');
             grow.setAttribute('style', 'display:flex;align-items:center;gap:6px;');
             gc.appendChild(grow);
-            this.el('div', 'color:#c9c9e3;font-size:17px;', grow, 'BUBBLE ' + s.bubble);
+            this.el('div', 'color:#c9c9e3;font-size:14px;', grow, 'BUBBLE ' + s.bubble);
             let wrap0: HTMLElement=document.createElement('span');
             wrap0.className='tsch-bubwrap';
             grow.appendChild(wrap0);
@@ -531,16 +531,16 @@ export class UIScene extends Phaser.Scene{
             if(pp!==undefined){
                 pname=(pp as {name: string}).name.toUpperCase();
             }
-            this.el('div', 'color:#c9c9e3;font-size:17px;', gc, pname + ' TO MOVE · ' + s.stage + ' · INTEREST ' + s.rate + ' PER 10 · STIPEND ' + s.stipend + ' · LAST ROLL ' + s.roll);
+            this.el('div', 'color:#c9c9e3;font-size:14px;', gc, pname + ' TO MOVE · ' + s.stage + ' · INTEREST ' + s.rate + ' PER 10 · STIPEND ' + s.stipend + ' · LAST ROLL ' + s.roll);
             for(let i=0;i<gs.state.players.length;i++){
                 let p: (typeof gs.state.players)[number]=gs.state.players[i] as (typeof gs.state.players)[number];
                 let hex: string='#' + (TOKEN_COLORS[i % TOKEN_COLORS.length] as number).toString(16).padStart(6, '0');
                 let card: HTMLElement=document.createElement('div');
                 card.className='tsch-card' + (i===s.cur?' tsch-card-cur':'');
                 this.plist.appendChild(card);
-                let head: HTMLElement=this.el('div', 'font-size:20px;color:' + hex + ';' + (i===s.cur?'text-shadow:0 0 10px ' + hex + ';':''), card, '');
+                let head: HTMLElement=this.el('div', 'font-size:16px;color:' + hex + ';' + (i===s.cur?'text-shadow:0 0 10px ' + hex + ';':''), card, '');
                 head.textContent=(i===s.cur?'> ':'') + p.name + (p.isBankrupt?' X BANKRUPT':'');
-                this.el('div', 'color:#c9c9e3;font-size:17px;', card, '' + p.credits + ' CREDITS · DEBT ' + p.debtToBank + ' · HYPE ' + p.hype + ' · CONCRETE ' + p.concrete + ' · STEEL ' + p.steel + ' · GLASS ' + p.glass + ' · SPACE ' + p.position + ' · PLOTS ' + p.ownedPlots.length);
+                this.el('div', 'color:#c9c9e3;font-size:14px;', card, '' + p.credits + ' CREDITS · DEBT ' + p.debtToBank + ' · HYPE ' + p.hype + ' · CONCRETE ' + p.concrete + ' · STEEL ' + p.steel + ' · GLASS ' + p.glass + ' · SPACE ' + p.position + ' · PLOTS ' + p.ownedPlots.length);
             }
         }
         let nowMs: number=Date.now();
