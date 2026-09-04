@@ -10,8 +10,8 @@ import {crashEventFor} from '../data/crashData.ts';
 import {Board} from '../objects/Board.ts';
 import {Space} from '../objects/Space.ts';
 import {BGMPlayer} from '../utils/BGMPlayer.ts';
-const FONT_DISPLAY: string='"Press Start 2P","Courier New",monospace';
-const FONT_BODY: string='"VT323","Courier New",monospace';
+const FONT_DISPLAY: string='"Noto Sans Mono",monospace';
+const FONT_BODY: string='"Noto Sans Mono",monospace';
 export type TurnStage='SETUP'|'ROLL'|'MOVING'|'RESOLVE'|'ACTION'|'GAMEOVER';
 export interface AuctionState{plotId: number, bid: number, bidder: number|null, turn: number, active: Array<boolean>}
 export const TOKEN_COLORS: Array<number>=[0xef4444, 0x3b82f6, 0xeab308, 0x22c55e, 0xa855f7, 0xf97316];
@@ -34,6 +34,8 @@ export class GameScene extends Phaser.Scene{
     inspector: string='Click a tile to inspect it.';
     selectedPlotId: number|null=null;
     resizeTimer: Phaser.Time.TimerEvent|null=null;
+    tileW: number=88;
+    tileH: number=44;
     diceText: Phaser.GameObjects.Text|null=null;
     bannerText: Phaser.GameObjects.Text|null=null;
     ring: Phaser.GameObjects.Rectangle|null=null;
@@ -43,12 +45,12 @@ export class GameScene extends Phaser.Scene{
     create(): void{
         this.buildBackground();
         this.renderBoardStatic();
-        this.diceText=this.add.text(this.scale.width/2, this.scale.height/2-40, '', {fontFamily: FONT_DISPLAY, fontSize: '54px', color: '#ffd319'});
+        this.diceText=this.add.text(this.scale.width/2, this.scale.height/2-40, '', {fontFamily: FONT_DISPLAY, fontSize: '54px', fontStyle: 'bold', color: '#ffd319'});
         this.diceText.setOrigin(0.5);
         this.diceText.setDepth(30);
         this.diceText.setStroke('#ff2e88', 6);
         this.diceText.setVisible(false);
-        this.bannerText=this.add.text(this.scale.width/2, this.scale.height/2-130, '', {fontFamily: FONT_DISPLAY, fontSize: '24px', color: '#22d3ee', align: 'center', wordWrap: {width: 940}});
+        this.bannerText=this.add.text(this.scale.width/2, this.scale.height/2-130, '', {fontFamily: FONT_DISPLAY, fontSize: '24px', fontStyle: 'bold', color: '#22d3ee', align: 'center', wordWrap: {width: 940}});
         this.bannerText.setOrigin(0.5);
         this.bannerText.setDepth(30);
         this.bannerText.setStroke('#05010f', 6);
@@ -173,30 +175,42 @@ export class GameScene extends Phaser.Scene{
     }
     renderBoardStatic(): void{
         let w: number=this.scale.width;
-        let h: number=this.scale.height-150;
+        let top: number=this.hudTop();
+        let h: number=this.scale.height-top-this.hudBottom();
+        if(h<300){
+            h=300;
+        }
+        let rx: number=Math.min(w*0.44, 450);
+        let ry: number=Math.min(h*0.368, 227);
+        this.tileW=Math.max(56, Math.min(88, 2*rx/10-4));
+        this.tileH=Math.max(38, Math.min(44, 2*ry/10-4));
         for(let i=0;i<40;i++){
-            let p: {x: number, y: number}=Board.posFor(i, w, h);
+            let p: {x: number, y: number}=Board.posFor(i, w, top, h);
             let c: number=colorForSpace(i);
-            this.add.rectangle(p.x, p.y, 92, 48, c, 0.20);
-            let face: Phaser.GameObjects.Rectangle=this.add.rectangle(p.x, p.y, 88, 44, 0x0d0424, 0.94);
+            let tw: number=this.tileW;
+            let th: number=this.tileH;
+            this.add.rectangle(p.x, p.y, tw+4, th+4, c, 0.20);
+            let face: Phaser.GameObjects.Rectangle=this.add.rectangle(p.x, p.y, tw, th, 0x0d0424, 0.94);
             face.setStrokeStyle(2, c, 1);
             this.rects[i]=face;
             face.setInteractive({useHandCursor: true});
             face.on('pointerdown', ()=>{
                 this.selectTile(i);
             });
-            this.add.rectangle(p.x, p.y-18, 88, 7, c, 1);
-            let lt: Phaser.GameObjects.Text=this.add.text(p.x, p.y-4, '' + i + ' ' + labelForSpace(i), {fontFamily: FONT_BODY, fontSize: '18px', color: '#ffffff'});
+            this.add.rectangle(p.x, p.y-th/2+3.5, tw, 7, c, 1);
+            let lt: Phaser.GameObjects.Text=this.add.text(p.x, p.y-3, '' + i + ' ' + labelForSpace(i), {fontFamily: FONT_BODY, fontSize: '18px', color: '#ffffff'});
             lt.setOrigin(0.5);
-            if(lt.width>82){
+            if(lt.width>tw-6){
+                let bound: number=tw-6;
                 let mg: Phaser.GameObjects.Graphics=this.add.graphics();
-                mg.fillRect(p.x-43, p.y-22, 86, 44);
+                mg.fillRect(p.x-tw/2+1, p.y-th/2+1, tw-2, th-2);
                 mg.setVisible(false);
                 lt.setMask(mg.createGeometryMask());
-                lt.x=p.x-41+lt.width/2;
-                this.tweens.add({targets: lt, x: p.x+41-lt.width/2, duration: Math.max(1400, lt.width*24), repeat: -1, repeatDelay: 900, ease: 'Linear'});
+                lt.x=p.x-(tw/2-2)+lt.width/2;
+                this.tweens.add({targets: lt, x: p.x+(tw/2-2)-lt.width/2, duration: Math.max(1400, lt.width*24), repeat: -1, repeatDelay: 900, ease: 'Linear'});
             }
-            let o: Phaser.GameObjects.Text=this.add.text(p.x, p.y+12, '', {fontFamily: FONT_BODY, fontSize: '17px', color: '#ffd319'}).setOrigin(0.5);
+            let o: Phaser.GameObjects.Text=this.add.text(p.x, p.y+th/2-9, '', {fontFamily: FONT_BODY, fontSize: '17px', color: '#ffd319'});
+            o.setOrigin(0.5);
             this.owners[i]=o;
         }
         this.sharpen();
@@ -269,8 +283,6 @@ export class GameScene extends Phaser.Scene{
         this.placeTokens();
     }
     placeTokens(): void{
-        let w: number=this.scale.width;
-        let h: number=this.scale.height-150;
         for(let i=0;i<this.state.players.length;i++){
             let p: PlayerData|undefined=this.state.players[i];
             let t: Phaser.GameObjects.Image|undefined=this.tokens[i];
@@ -282,20 +294,38 @@ export class GameScene extends Phaser.Scene{
                 continue;
             }
             t.setVisible(true);
-            let bp: {x: number, y: number}=Board.posFor(p.position, w, h);
+            let bp: {x: number, y: number}=this.bpos(p.position);
             let off: {x: number, y: number}=Board.tokenOffset(i);
             t.setPosition(bp.x+off.x, bp.y+off.y);
         }
         let cur: PlayerData|undefined=this.state.players[this.state.currentPlayerIndex];
         let rg: Phaser.GameObjects.Rectangle|null=this.ring;
         if(rg!==null&&cur!==undefined&&!cur.isBankrupt&&this.stage!=='SETUP'){
-            let bp2: {x: number, y: number}=Board.posFor(cur.position, w, h);
+            let bp2: {x: number, y: number}=this.bpos(cur.position);
             rg.setPosition(bp2.x, bp2.y);
+            rg.setSize(this.tileW+8, this.tileH+8);
             rg.setVisible(true);
         }
         else if(rg!==null){
             rg.setVisible(false);
         }
+    }
+    hudTop(): number{
+        let v: unknown=this.registry.get('hudTop');
+        if(typeof v==='number'&&v>0){
+            return v;
+        }
+        return 90;
+    }
+    hudBottom(): number{
+        let v: unknown=this.registry.get('hudBottom');
+        if(typeof v==='number'&&v>0){
+            return v;
+        }
+        return 190;
+    }
+    bpos(i: number): {x: number, y: number}{
+        return Board.posFor(i, this.scale.width, this.hudTop(), this.scale.height-this.hudTop()-this.hudBottom());
     }
     say(s: string): void{
         this.statusMsg=s;
@@ -360,52 +390,41 @@ export class GameScene extends Phaser.Scene{
             }
             let pl: PlotData|null=this.plotByBoard(i);
             let s2: string='';
+            let qc: string='#ffd319';
             if(pl===null){
                 s2='';
             }
             else if(pl.constructionLevel<0){
                 s2='REMOVED';
+                qc='#9d9db8';
             }
             else if(pl.ownerIndex===null){
                 s2='' + pl.baseCost + ' CREDITS';
             }
             else if(pl.isMortgaged){
                 s2='MORTGAGED';
+                qc='#ff5b5b';
             }
             else if(pl.constructionLevel===0){
                 s2='EMPTY LOT';
+                qc='#ffffff';
             }
             else{
-                let st1: string='☆☆☆☆';
-                if(pl.constructionLevel===1){
-                    st1='★☆☆☆';
-                }
-                else if(pl.constructionLevel===2){
-                    st1='★★☆☆';
-                }
-                else if(pl.constructionLevel===3){
-                    st1='★★★☆';
-                }
-                else{
-                    st1='★★★★';
-                }
-                let qq: string='?';
+                s2='LEVEL ' + pl.constructionLevel;
                 if(this.state.qualitiesRevealed||pl.ownerIndex===this.state.currentPlayerIndex){
                     if(pl.quality==='GOOD'){
-                        qq='GOOD';
+                        qc='#4ade80';
                     }
                     else if(pl.quality==='BAD'){
-                        qq='BAD';
-                    }
-                    else{
-                        qq='AVERAGE';
+                        qc='#ff5b5b';
                     }
                 }
-                s2=st1 + ' ' + qq;
             }
             o.setText(s2);
-            if(o.width>82){
-                o.setScale(82/o.width);
+            o.setColor(qc);
+            let maxOwn: number=this.tileW-6;
+            if(o.width>maxOwn){
+                o.setScale(maxOwn/o.width);
             }
             else{
                 o.setScale(1);
@@ -558,8 +577,6 @@ export class GameScene extends Phaser.Scene{
     }
     walkSteps(p: PlayerData, steps: number): void{
         let idx: number=0;
-        let w: number=this.scale.width;
-        let h: number=this.scale.height-150;
         let stepFn: ()=>void=()=>{
             if(idx>=steps){
                 this.afterMove();
@@ -571,12 +588,12 @@ export class GameScene extends Phaser.Scene{
                 if(st>0){
                     p.credits=p.credits+st;
                     this.say(p.name + ' passed START +' + st + ' Cr.');
-                    let bp0: {x: number, y: number}=Board.posFor(0, w, h);
+                    let bp0: {x: number, y: number}=this.bpos(0);
                     this.floatText(bp0.x, bp0.y-46, '+' + st + ' CR', '#ffd319');
                     BGMPlayer.instance().coin();
                 }
             }
-            let bp: {x: number, y: number}=Board.posFor(p.position, w, h);
+            let bp: {x: number, y: number}=this.bpos(p.position);
             let off: {x: number, y: number}=Board.tokenOffset(this.state.currentPlayerIndex);
             let tok: Phaser.GameObjects.Image|undefined=this.tokens[this.state.currentPlayerIndex];
             if(tok!==undefined&&tok!==null){
@@ -603,7 +620,7 @@ export class GameScene extends Phaser.Scene{
                 tok.setScale(TOKEN_SCALE);
             }});
         }
-        let bp: {x: number, y: number}=Board.posFor(p.position, this.scale.width, this.scale.height-150);
+        let bp: {x: number, y: number}=this.bpos(p.position);
         this.burst(bp.x, bp.y, 0x22d3ee, 8);
         this.stage='RESOLVE';
         this.resolveSpace(p.position);
@@ -909,7 +926,7 @@ export class GameScene extends Phaser.Scene{
         p.ownedPlots.push(pl.id);
         this.say(p.name + ' bought ' + pl.name + ' for ' + pl.baseCost + ' Cr.');
         BGMPlayer.instance().coin();
-        let bp: {x: number, y: number}=Board.posFor(pl.boardIndex, this.scale.width, this.scale.height-150);
+        let bp: {x: number, y: number}=this.bpos(pl.boardIndex);
         this.burst(bp.x, bp.y, 0xffd319, 14);
         this.floatText(bp.x, bp.y-46, '-' + pl.baseCost + ' CR', '#ffd319');
         this.pendingBuyPlotId=null;
@@ -987,7 +1004,7 @@ export class GameScene extends Phaser.Scene{
         let b: string=st.addBubble(d);
         this.say(st.getCurrentPlayer().name + ' built ' + pl.name + ' to L' + lvl + '. Bubble ' + st.bubbleMeter + '.');
         BGMPlayer.instance().build();
-        let bp: {x: number, y: number}=Board.posFor(pl.boardIndex, this.scale.width, this.scale.height-150);
+        let bp: {x: number, y: number}=this.bpos(pl.boardIndex);
         let col: number=0x22d3ee;
         if(lvl===2){
             col=0xff2e88;
@@ -1195,7 +1212,7 @@ export class GameScene extends Phaser.Scene{
         this.cameras.main.flash(400, 220, 38, 38);
         BGMPlayer.instance().bankrupt();
         this.banner(p.name + ' IS OUT!', '#ef4444');
-        let bp: {x: number, y: number}=Board.posFor(p.position, this.scale.width, this.scale.height-150);
+        let bp: {x: number, y: number}=this.bpos(p.position);
         this.burst(bp.x, bp.y, 0xef4444, 26);
         this.refreshBoard();
         let w: number|null=st.checkVictory();
@@ -1415,7 +1432,7 @@ export class GameScene extends Phaser.Scene{
         w.ownedPlots.push(pl.id);
         this.say(w.name + ' won ' + pl.name + ' for ' + a.bid + ' Cr.');
         BGMPlayer.instance().fanfare();
-        let bp: {x: number, y: number}=Board.posFor(pl.boardIndex, this.scale.width, this.scale.height-150);
+        let bp: {x: number, y: number}=this.bpos(pl.boardIndex);
         this.burst(bp.x, bp.y, 0xec4899, 18);
         this.refreshBoard();
         this.toAction();
