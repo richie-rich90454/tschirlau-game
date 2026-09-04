@@ -54,6 +54,21 @@ export class UIScene extends Phaser.Scene{
         this.buildSetup();
         this.buildRules();
         this.time.addEvent({delay: 300, loop: true, callback: ()=>{this.refresh();}});
+        let key: (which: string)=>void=(which: string)=>{
+            let a: Element|null=document.activeElement;
+            if(a!==null&&(a.tagName==='INPUT'||a.tagName==='SELECT')){
+                return;
+            }
+            if(which==='roll'&&!(this.btns['roll'] as HTMLButtonElement).disabled){
+                this.g().rollAndMove();
+            }
+            if(which==='end'&&!(this.btns['end'] as HTMLButtonElement).disabled){
+                this.g().endTurn();
+            }
+        };
+        this.input.keyboard?.on('keydown-R', ()=>{key('roll');});
+        this.input.keyboard?.on('keydown-E', ()=>{key('end');});
+        this.input.keyboard?.on('keydown-M', ()=>{this.toggleBgm(this.btns['bgm'] as HTMLButtonElement);});
         this.refresh();
     }
     injectCss(): void{
@@ -105,9 +120,9 @@ export class UIScene extends Phaser.Scene{
         let row: HTMLElement=document.createElement('div');
         row.setAttribute('style', 'display:flex;gap:4px;flex-wrap:wrap;align-items:center;');
         bot.appendChild(row);
-        this.btns['roll']=this.btn('ROLL DICE', row, ()=>{this.g().rollAndMove();});
+        this.btns['roll']=this.btn('ROLL [R]', row, ()=>{this.g().rollAndMove();});
         this.btns['pay']=this.btn('PAY DUE', row, ()=>{this.g().payDue();});
-        this.btns['end']=this.btn('END TURN', row, ()=>{this.g().endTurn();});
+        this.btns['end']=this.btn('END [E]', row, ()=>{this.g().endTurn();});
         this.btns['bankrupt']=this.btn('BANKRUPT', row, ()=>{this.g().declareBankruptcy();});
         let bs: HTMLSelectElement=document.createElement('select');
         bs.className='tsch-in';
