@@ -14,6 +14,7 @@ const FONT_DISPLAY: string='"Noto Sans Mono",monospace';
 const FONT_BODY: string='"Noto Sans Mono",monospace';
 export type TurnStage='SETUP'|'ROLL'|'MOVING'|'RESOLVE'|'ACTION'|'GAMEOVER';
 export interface AuctionState{plotId: number, bid: number, bidder: number|null, turn: number, active: Array<boolean>}
+export interface Ticker{t: Phaser.GameObjects.Text, full: string, maxW: number, n: number, k: number, hold: number}
 export const TOKEN_COLORS: Array<number>=[0xef4444, 0x3b82f6, 0xeab308, 0x22c55e, 0xa855f7, 0xf97316];
 const TOKEN_SCALE: number=1.15;
 export class GameScene extends Phaser.Scene{
@@ -40,6 +41,8 @@ export class GameScene extends Phaser.Scene{
     lastBB: number=0;
     lastBL: number=0;
     lastBR: number=0;
+    tickers: Array<Ticker>=[];
+    tickerTimer: Phaser.Time.TimerEvent|null=null;
     tileW: number=88;
     tileH: number=44;
     diceText: Phaser.GameObjects.Text|null=null;
@@ -82,6 +85,7 @@ export class GameScene extends Phaser.Scene{
             void document.fonts.ready.then(()=>{
                 this.refreshBoard();
                 this.sharpen();
+                this.relayoutTickers();
             });
         }
         catch(e){
@@ -220,15 +224,7 @@ export class GameScene extends Phaser.Scene{
             this.add.rectangle(p.x, p.y-th/2+3.5, tw, 7, c, 1);
             let lt: Phaser.GameObjects.Text=this.add.text(p.x, p.y-3, '' + i + ' ' + labelForSpace(i), {fontFamily: FONT_BODY, fontSize: '18px', color: '#ffffff'});
             lt.setOrigin(0.5);
-            if(lt.width>tw-6){
-                let bound: number=tw-6;
-                let mg: Phaser.GameObjects.Graphics=this.add.graphics();
-                mg.fillRect(p.x-tw/2+1, p.y-th/2+1, tw-2, th-2);
-                mg.setVisible(false);
-                lt.setMask(mg.createGeometryMask());
-                lt.x=p.x-(tw/2-2)+lt.width/2;
-                this.tweens.add({targets: lt, x: p.x+(tw/2-2)-lt.width/2, duration: Math.max(1400, lt.width*24), repeat: -1, repeatDelay: 900, ease: 'Linear'});
-            }
+            this.setFitted(lt, '' + i + ' ' + labelForSpace(i), tw-6);
             let o: Phaser.GameObjects.Text=this.add.text(p.x, p.y+th/2-9, '', {fontFamily: FONT_BODY, fontSize: '17px', color: '#ffd319'});
             o.setOrigin(0.5);
             this.owners[i]=o;
@@ -456,13 +452,7 @@ export class GameScene extends Phaser.Scene{
             }
             o.setText(s2);
             o.setColor(qc);
-            let maxOwn: number=this.tileW-6;
-            if(o.width>maxOwn){
-                o.setScale(maxOwn/o.width);
-            }
-            else{
-                o.setScale(1);
-            }
+            this.setFitted(o, s2, this.tileW-6);
             if(fr!==undefined&&fr!==null){
                 if(pl!==undefined&&pl!==null&&pl.ownerIndex!==null){
                     fr.setStrokeStyle(3, TOKEN_COLORS[pl.ownerIndex % TOKEN_COLORS.length] as number, 1);
@@ -496,6 +486,11 @@ export class GameScene extends Phaser.Scene{
                 d.destroy();
             }
         }
+        if(this.tickerTimer!==null){
+            this.tickerTimer.remove();
+            this.tickerTimer=null;
+        }
+        this.tickers=[];
         this.rects=[];
         this.owners=[];
         this.buildBackground();
@@ -589,6 +584,87 @@ export class GameScene extends Phaser.Scene{
             return 'LOANS, REPAYMENTS, MORTGAGES, SALES.';
         }
         return 'TEAM UP OR BETRAY FOR PROFIT.';
+    }
+    setFitted(t: Phaser.GameObjects.Text, full: string, maxW: number): void{
+        t.setText(full);
+        t.setScale(1);
+        if(full.length===0||t.width<=maxW){
+            this.dropTicker(t);
+            return;
+        }
+        let avg: number=t.width/full.length;
+        let n: number=Math.floor(maxW/avg);
+        if(n<1){
+            n=1;
+        }
+        let e: Ticker|undefined=undefined;
+        for(let i=0;i<this.tickers.length;i++){
+            let c: Ticker|undefined=this.tickers[i];
+            if(c!==undefined&&c.t===t){
+                e=c;
+            }
+        }
+        if(e===undefined){
+            e={t: t, full: full, maxW: maxW, n: n, k: 0, hold: 2};
+            this.tickers.push(e);
+        }
+        else{
+            e.full=full;
+            e.maxW=maxW;
+            e.n=n;
+            e.k=0;
+            e.hold=2;
+        }
+        this.ensureTickers();
+        this.sliceTicker(e);
+    }
+    sliceTicker(e: Ticker): void{
+        let cyc: string=e.full + '   ';
+        e.t.setText((cyc + cyc).slice(e.k, e.k+e.n));
+    }
+    dropTicker(t: Phaser.GameObjects.Text): void{
+        for(let i=this.tickers.length-1;i>=0;i--){
+            let c: Ticker|undefined=this.tickers[i];
+            if(c!==undefined&&c.t===t){
+                this.tickers.splice(i, 1);
+            }
+        }
+    }
+    ensureTickers(): void{
+        if(this.tickerTimer!==null){
+            return;
+        }
+        this.tickerTimer=this.time.addEvent({delay: 380, loop: true, callback: ()=>{
+            this.updateTickers();
+        }});
+    }
+    updateTickers(): void{
+        for(let i=0;i<this.tickers.length;i++){
+            let e: Ticker|undefined=this.tickers[i];
+            if(e===undefined){
+                continue;
+            }
+            if(e.hold>0){
+                e.hold=e.hold-1;
+                continue;
+            }
+            e.k=e.k+1;
+            let cyc: string=e.full + '   ';
+            if(e.k>=cyc.length){
+                e.k=0;
+                e.hold=3;
+            }
+            e.t.setText((cyc + cyc).slice(e.k, e.k+e.n));
+        }
+    }
+    relayoutTickers(): void{
+        let all: Array<Ticker>=this.tickers.slice();
+        for(let i=0;i<all.length;i++){
+            let e: Ticker|undefined=all[i];
+            if(e!==undefined){
+                this.setFitted(e.t, e.full, e.maxW);
+            }
+        }
     }
     rollAndMove(): void{
         if(this.stage!=='ROLL'){
