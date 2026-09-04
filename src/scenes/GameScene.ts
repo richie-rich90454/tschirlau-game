@@ -55,6 +55,10 @@ export class GameScene extends Phaser.Scene{
         this.ring.setDepth(5);
         this.ring.setVisible(false);
         this.tweens.add({targets: this.ring, alpha: 0.3, duration: 550, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'});
+        let startTile: Phaser.GameObjects.Rectangle|null=this.rects[0] as Phaser.GameObjects.Rectangle|null;
+        if(startTile!==undefined&&startTile!==null){
+            this.tweens.add({targets: startTile, alpha: 0.55, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'});
+        }
         this.scene.launch('UIScene');
     }
     buildBackground(): void{
