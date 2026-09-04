@@ -1,6 +1,42 @@
 // Procedural 8-bit BGM player using Web Audio API. Cycles track 1 and 2.
-import {TRACK1_MELODY, TRACK1_BASS, TRACK1_BPM, TRACK2_MELODY, TRACK2_BASS, TRACK2_BPM, midiToFreq} from '../data/bgmData.ts';
-import type {BgmNote} from '../data/bgmData.ts';
+// ponytail: soundtrack below is an original composition for this game.
+// No transcribed material is stored anywhere in tracked files.
+export interface BgmNote{midi: number, duration: number}
+function seq(s: string): Array<BgmNote>{
+    let out: Array<BgmNote>=[];
+    let parts: Array<string>=s.split('|');
+    for(let i=0;i<parts.length;i++){
+        let chunk: string|undefined=parts[i];
+        if(chunk===undefined){
+            continue;
+        }
+        let toks: Array<string>=chunk.trim().split(' ');
+        for(let j=0;j<toks.length;j++){
+            let t: string|undefined=toks[j];
+            if(t===undefined||t.length<5){
+                continue;
+            }
+            let inner: string=t.slice(1, t.length-1);
+            let kv: Array<string>=inner.split(':');
+            let m: string|undefined=kv[0];
+            let d: string|undefined=kv[1];
+            if(m===undefined||d===undefined){
+                continue;
+            }
+            out.push({midi: parseInt(m, 10), duration: parseFloat(d)});
+        }
+    }
+    return out;
+}
+function midiToFreq(m: number): number{
+    return 440*Math.pow(2, (m-69)/12);
+}
+const TRACK1_BPM: number=132;
+const TRACK2_BPM: number=88;
+const TRACK1_MELODY: Array<BgmNote>=seq('(69:0.5) (72:0.5) (76:0.5) (81:0.5) | (80:0.5) (76:0.5) (72:0.5) (76:0.5) | (74:0.5) (77:0.5) (81:0.5) (86:0.5) | (85:0.5) (81:0.5) (77:0.5) (74:0.5) | (69:0.5) (72:0.5) (76:0.5) (81:0.5) | (84:0.5) (81:0.5) (80:0.5) (76:0.5) | (74:1) (71:1) (72:2) | (0:2) (69:0.5) (72:0.5) (74:0.5) (76:0.5) |');
+const TRACK1_BASS: Array<BgmNote>=[{midi: 45, duration: 4}, {midi: 45, duration: 4}, {midi: 41, duration: 4}, {midi: 43, duration: 4}];
+const TRACK2_MELODY: Array<BgmNote>=seq('(74:1) (77:1) (81:2) | (80:1) (77:1) (74:2) | (72:1) (74:1) (77:2) | (76:1) (74:1) (72:2) | (74:1) (77:1) (81:2) | (86:2) (85:1) (81:1) | (80:4) | (0:4) |');
+const TRACK2_BASS: Array<BgmNote>=[{midi: 38, duration: 4}, {midi: 34, duration: 4}, {midi: 36, duration: 4}, {midi: 33, duration: 4}];
 export class BGMPlayer{
     ctx: AudioContext|null=null;
     master: GainNode|null=null;
