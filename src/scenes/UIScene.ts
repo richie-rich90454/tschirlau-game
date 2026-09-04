@@ -3,14 +3,14 @@ import Phaser from 'phaser';
 import type {GameScene} from './GameScene.ts';
 import {TOKEN_COLORS} from './GameScene.ts';
 import {BGMPlayer} from '../utils/BGMPlayer.ts';
-const CSS: string=`.tsch-btn{font-family:'VT323',monospace;font-size:20px;background:#12082e;color:#fff;border:2px solid #22d3ee;padding:5px 12px;margin:2px;cursor:pointer;text-shadow:0 0 6px #22d3ee;box-shadow:0 0 8px rgba(34,211,238,.45),inset 0 0 8px rgba(34,211,238,.15);transition:transform .08s,box-shadow .12s;}
+const CSS: string=`.tsch-btn{font-family:'Noto Sans Mono',monospace;font-size:20px;background:#12082e;color:#fff;border:2px solid #22d3ee;padding:5px 12px;margin:2px;cursor:pointer;font-weight:700;text-shadow:0 0 6px #22d3ee;box-shadow:0 0 8px rgba(34,211,238,.45),inset 0 0 8px rgba(34,211,238,.15);transition:transform .08s,box-shadow .12s;}
 .tsch-btn:hover:not(:disabled){box-shadow:0 0 16px rgba(34,211,238,.9),inset 0 0 10px rgba(34,211,238,.3);transform:translateY(-1px);}
 .tsch-btn:active:not(:disabled){transform:scale(.95);}
 .tsch-btn:disabled{opacity:.30;cursor:default;box-shadow:none;text-shadow:none;}
 .tsch-glow{border-color:#ffd319 !important;text-shadow:0 0 8px #ffd319 !important;box-shadow:0 0 18px rgba(255,211,25,.85) !important;animation:tsch-blink 1s infinite;}
-.tsch-in{font-family:'VT323',monospace;font-size:17px;background:#0a0420;color:#ffd319;border:2px solid #b026ff;margin:2px;padding:2px 6px;max-width:150px;}
-.tsch-top{background:linear-gradient(180deg,#0a0420,#1a0533) !important;border-bottom:2px solid #ff2e88 !important;box-shadow:0 2px 18px rgba(255,46,136,.5) !important;font-family:'VT323',monospace !important;font-size:21px !important;color:#fff !important;text-shadow:0 0 8px #22d3ee !important;}
-.tsch-cards{background:rgba(10,4,32,.93) !important;border-bottom:2px solid #b026ff !important;box-shadow:0 2px 14px rgba(176,38,255,.45) !important;font-family:'VT323',monospace !important;display:flex !important;gap:8px !important;padding:4px 10px !important;flex-wrap:wrap !important;}
+.tsch-in{font-family:'Noto Sans Mono',monospace;font-size:17px;background:#0a0420;color:#ffd319;border:2px solid #b026ff;margin:2px;padding:2px 6px;max-width:150px;}
+.tsch-top{background:linear-gradient(180deg,#0a0420,#1a0533) !important;border-bottom:2px solid #ff2e88 !important;box-shadow:0 2px 18px rgba(255,46,136,.5) !important;font-family:'Noto Sans Mono',monospace !important;font-size:21px !important;color:#fff !important;text-shadow:0 0 8px #22d3ee !important;}
+.tsch-cards{background:rgba(10,4,32,.93) !important;border-bottom:2px solid #b026ff !important;box-shadow:0 2px 14px rgba(176,38,255,.45) !important;font-family:'Noto Sans Mono',monospace !important;display:flex !important;gap:8px !important;padding:4px 10px !important;flex-wrap:wrap !important;}
 .tsch-card{border:1px solid #444466;padding:0 8px;min-width:150px;line-height:1.05;}
 .tsch-card-cur{border-color:#ffd319 !important;box-shadow:0 0 12px rgba(255,211,25,.65);}
 .tsch-group{border:1px solid #444466;padding:4px 6px;display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
@@ -18,13 +18,14 @@ const CSS: string=`.tsch-btn{font-family:'VT323',monospace;font-size:20px;backgr
 .tsch-insp{color:#22d3ee;font-size:21px;min-height:24px;white-space:nowrap;overflow:hidden;text-shadow:0 0 8px rgba(34,211,238,.6);}
 .tsch-marq{animation:tsch-slide 7s linear infinite alternate;}
 @keyframes tsch-slide{0%{transform:translateX(0);}100%{transform:translateX(var(--tsch-shift,0px));}}
-.tsch-bot{background:linear-gradient(0deg,#0a0420,#1a0533) !important;border-top:2px solid #22d3ee !important;box-shadow:0 -2px 18px rgba(34,211,238,.4) !important;font-family:'VT323',monospace !important;}
+.tsch-bot{background:linear-gradient(0deg,#0a0420,#1a0533) !important;border-top:2px solid #22d3ee !important;box-shadow:0 -2px 18px rgba(34,211,238,.4) !important;font-family:'Noto Sans Mono',monospace !important;}
 .tsch-msg{color:#ffd319;font-size:21px;min-height:24px;white-space:nowrap;overflow:hidden;text-shadow:0 0 8px rgba(255,211,25,.6);}
 .tsch-due{color:#ff5b5b !important;text-shadow:0 0 10px #ff0000 !important;animation:tsch-blink .6s infinite;}
-.tsch-modal{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);background:rgba(13,4,36,.97);color:#fff;padding:18px;pointer-events:auto;border:3px solid #ff2e88;box-shadow:0 0 28px rgba(255,46,136,.75);font-family:'VT323',monospace;font-size:21px;max-width:380px;z-index:60;animation:tsch-pop .18s ease-out;}
+.tsch-modal{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);background:rgba(13,4,36,.97);color:#fff;padding:18px;pointer-events:auto;border:3px solid #ff2e88;box-shadow:0 0 28px rgba(255,46,136,.75);font-family:'Noto Sans Mono',monospace;font-size:21px;max-width:380px;z-index:60;animation:tsch-pop .18s ease-out;}
 .tsch-rules{max-width:640px;max-height:80vh;overflow:auto;top:50%;}
 .tsch-h{color:#ffd319;margin:12px 0 4px;font-size:22px;text-shadow:0 0 8px rgba(255,211,25,.6);}
-.tsch-title{font-family:'Press Start 2P',monospace;font-size:15px;color:#ffd319;text-shadow:0 0 10px #ff2e88;margin-bottom:10px;line-height:1.6;}
+.tsch-title{font-family:'Noto Sans Mono',monospace;font-weight:700;font-size:15px;color:#ffd319;text-shadow:0 0 10px #ff2e88;margin-bottom:10px;line-height:1.6;}
+.tsch-ttl{font-weight:700;color:#ffd319;font-size:21px;text-shadow:0 0 10px #ff2e88;}
 .tsch-sub{color:#22d3ee;margin-bottom:8px;}
 .tsch-bubwrap{display:inline-block;width:100px;height:12px;border:1px solid #22d3ee;background:#0a0420;margin-left:6px;vertical-align:middle;}
 .tsch-bubfill{display:inline-block;height:10px;background:linear-gradient(90deg,#22d3ee,#b026ff);box-shadow:0 0 8px #22d3ee;vertical-align:top;}
@@ -40,6 +41,7 @@ export class UIScene extends Phaser.Scene{
     plist: HTMLElement|null=null;
     msg: HTMLElement|null=null;
     insp: HTMLElement|null=null;
+    botEl: HTMLElement|null=null;
     btns: Record<string, HTMLButtonElement>={};
     setupBox: HTMLElement|null=null;
     buyBox: HTMLElement|null=null;
@@ -110,7 +112,7 @@ export class UIScene extends Phaser.Scene{
     }
     buildRoot(): void{
         let r: HTMLElement=document.createElement('div');
-        r.setAttribute('style', 'position:fixed;inset:0;pointer-events:none;font-family:\'VT323\',monospace;z-index:10;');
+        r.setAttribute('style', 'position:fixed;inset:0;pointer-events:none;font-family:\'Noto Sans Mono\',monospace;z-index:10;');
         document.body.appendChild(r);
         this.root=r;
         let top: HTMLElement=document.createElement('div');
@@ -127,14 +129,20 @@ export class UIScene extends Phaser.Scene{
         bot.className='tsch-bot';
         bot.setAttribute('style', 'position:absolute;bottom:0;left:0;right:0;color:#fff;padding:6px 10px;font-size:18px;pointer-events:auto;');
         r.appendChild(bot);
+        this.botEl=bot;
+        let brow: HTMLElement=document.createElement('div');
+        brow.setAttribute('style', 'display:flex;gap:12px;');
+        bot.appendChild(brow);
         let m: HTMLElement=document.createElement('div');
         m.className='tsch-msg';
-        bot.appendChild(m);
+        m.setAttribute('style', 'flex:1;min-width:0;');
+        brow.appendChild(m);
         this.msg=m;
         let insp: HTMLElement=document.createElement('div');
         insp.className='tsch-insp';
+        insp.setAttribute('style', 'flex:1;min-width:0;');
         insp.textContent='Click a tile to inspect it.';
-        bot.appendChild(insp);
+        brow.appendChild(insp);
         this.insp=insp;
         let row: HTMLElement=document.createElement('div');
         row.setAttribute('style', 'display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;');
@@ -315,16 +323,16 @@ export class UIScene extends Phaser.Scene{
         this.el('div', 'line-height:1.35;', b, 'Every time you pass START: +5 credits in BOOM, +2 in COOLING, +0 in CRASH. Landing exactly on START just rests.');
         let h3: HTMLElement=this.el('div', '', b, 'BILLS (END TURN)');
         h3.className='tsch-h';
-        this.el('div', 'line-height:1.35;', b, 'Upkeep for every unfinished plot (levels 1-2 only) + bank interest + hype upkeep in CRASH. Interest = floor(debt x rate / 10). Rates: BOOM 1, COOLING 2, CRASH 5 / 3 / 2 for HARD / MEDIUM / SOFT. Upkeep L1/L2: BOOM 1/2, COOLING 2/4, CRASH HARD 3/6, MEDIUM 2/4, SOFT 1/2. GOOD plots -1 upkeep, BAD plots +1. Hype upkeep = your hype x 2 / 1 / 0.5, rounded up.');
+        this.el('div', 'line-height:1.35;', b, 'Upkeep for every unfinished plot (levels 1-2 only) + bank interest + hype upkeep in CRASH. Interest = floor(debt x rate / 10). Rates: BOOM 1, COOLING 2, CRASH 5 / 3 / 2 for HARD / MEDIUM / SOFT. Upkeep levels 1 and 2: BOOM 1/2, COOLING 2/4, CRASH HARD 3/6, MEDIUM 2/4, SOFT 1/2. GOOD plots -1 upkeep, BAD plots +1. Hype upkeep = your hype x 2 / 1 / 0.5, rounded up.');
         let h4: HTMLElement=this.el('div', '', b, 'BUILDING');
         h4.className='tsch-h';
-        this.el('div', 'line-height:1.35;', b, 'Build on any plot you own: L1 Gate costs 1 concrete + 1 steel + 2 credits. L2 Half-Built costs 2 concrete + 2 steel + 1 glass + 5 credits. L3 Tower costs 2 concrete + 2 steel + 2 glass + 8 credits. L4 Luxury costs 3 concrete + 3 steel + 3 glass + 12 credits. COOLING multiplies materials x1.5 (rounded up). DEFER borrows the credit part from the bank. Never on mortgaged plots, never on Gate 0, never during CRASH.');
+        this.el('div', 'line-height:1.35;', b, 'Build on any plot you own: Level 1 Gate costs 1 concrete + 1 steel + 2 credits. Level 2 Half-Built costs 2 concrete + 2 steel + 1 glass + 5 credits. Level 3 Tower costs 2 concrete + 2 steel + 2 glass + 8 credits. Level 4 Luxury costs 3 concrete + 3 steel + 3 glass + 12 credits. COOLING multiplies materials x1.5 (rounded up). DEFER borrows the credit part from the bank. Never on mortgaged plots, never on Gate 0, never during CRASH.');
         let h5: HTMLElement=this.el('div', '', b, 'RENT AND QUALITY');
         h5.className='tsch-h';
-        this.el('div', 'line-height:1.35;', b, 'Finished towers charge visitors RENT: L3 = 6, L4 = 12, times 1.5 for GOOD, 1.0 for AVERAGE, 0.5 for BAD plots. Unfinished hulks charge nothing and give the visitor +1 HYPE instead. Gate 0 starts built, cannot be upgraded, pays its owner +1 HYPE every turn, mortgages for 0, and abandoning it pays +5 and removes it forever.');
+        this.el('div', 'line-height:1.35;', b, 'Finished towers charge visitors RENT: Level 3 pays 6, Level 4 pays 12, times 1.5 for GOOD, 1.0 for AVERAGE, 0.5 for BAD plots. Unfinished hulks charge nothing and give the visitor +1 HYPE instead. Gate 0 starts built, cannot be upgraded, pays its owner +1 HYPE every turn, mortgages for 0, and abandoning it pays +5 and removes it forever. On the board, the level line is green, amber or red for GOOD, AVERAGE or BAD plots.');
         let h6: HTMLElement=this.el('div', '', b, 'BUBBLE METER');
         h6.className='tsch-h';
-        this.el('div', 'line-height:1.35;', b, 'Building L1 adds +1, L2 adds +2, finishing L3 or L4 removes 2. Repaying 5+ credits removes 1 per 5. At 15 during COOLING everyone pays 2 credits or loses 1 hype. At 20 the bubble bursts into an early HARD crash. A second 20 after the crash ends everything instantly and the richest ruin wins.');
+        this.el('div', 'line-height:1.35;', b, 'Building Level 1 adds +1, Level 2 adds +2, finishing Level 3 or Level 4 removes 2. Repaying 5+ credits removes 1 per 5. At 15 during COOLING everyone pays 2 credits or loses 1 hype. At 20 the bubble bursts into an early HARD crash. A second 20 after the crash ends everything instantly and the richest ruin wins.');
         let h7: HTMLElement=this.el('div', '', b, 'THE CRASH');
         h7.className='tsch-h';
         this.el('div', 'line-height:1.35;', b, 'Strikes at round 16 unless the bubble bursts first. Severity is drawn: 40% HARD, 35% MEDIUM, 25% SOFT. Plot values drop 80% / 50% / 30%. Interest becomes 5 / 3 / 2 per 10 credits of debt. Every hype costs 2 / 1 / 0.5 credits per turn. Stipend is 0 and building is over. Qualities are public from round 11 on.');
@@ -366,29 +374,36 @@ export class UIScene extends Phaser.Scene{
             e.classList.remove('tsch-marq');
         }
     }
+    topBarHeight(): number{
+        let t: number=0;
+        if(this.topBar!==null){
+            t=t+this.topBar.offsetHeight;
+        }
+        if(this.plist!==null){
+            t=t+this.plist.offsetHeight;
+        }
+        return t;
+    }
+    bottomHeight(): number{
+        if(this.botEl!==null){
+            return this.botEl.offsetHeight;
+        }
+        return 190;
+    }
     refresh(): void{
         if(this.game2===null){
             return;
         }
         let gs: GameScene=this.g();
         let s: ReturnType<GameScene['hudSnapshot']>=gs.hudSnapshot();
+        this.registry.set('hudTop', this.topBarHeight());
+        this.registry.set('hudBottom', this.bottomHeight());
         if(this.topBar!==null){
             this.topBar.textContent='';
-            let info: HTMLElement=document.createElement('span');
-            let pname: string='NOBODY';
-            let pp: (typeof gs.state.players)[number]|undefined=gs.state.players[s.cur];
-            if(pp!==undefined){
-                pname=(pp as {name: string}).name.toUpperCase();
-            }
-            info.textContent='ROUND ' + s.round + ' OF 20 · ' + s.phase + ' · BUBBLE ' + s.bubble + ' · ' + pname + ' TO MOVE · ' + s.stage + ' · INTEREST ' + s.rate + ' PER 10 · STIPEND ' + s.stipend + ' · LAST ROLL ' + s.roll;
-            this.topBar.appendChild(info);
-            let wrap: HTMLElement=document.createElement('span');
-            wrap.className='tsch-bubwrap';
-            this.topBar.appendChild(wrap);
-            let fill: HTMLElement=document.createElement('span');
-            fill.className='tsch-bubfill' + (s.bubble>=15?' tsch-bubhot':'');
-            fill.setAttribute('style', 'width:' + Math.min(100, s.bubble*5) + 'px;');
-            wrap.appendChild(fill);
+            let ttl: HTMLElement=document.createElement('span');
+            ttl.className='tsch-ttl';
+            ttl.textContent='TSCHIRLAU · GRAND GATE MIRAGE';
+            this.topBar.appendChild(ttl);
             let bg: HTMLButtonElement=this.btns['bgm'] as HTMLButtonElement;
             this.topBar.appendChild(bg);
             let rb: HTMLButtonElement=document.createElement('button');
@@ -402,6 +417,27 @@ export class UIScene extends Phaser.Scene{
         }
         if(this.plist!==null){
             this.plist.textContent='';
+            let gc: HTMLElement=document.createElement('div');
+            gc.className='tsch-card';
+            this.plist.appendChild(gc);
+            this.el('div', 'font-size:20px;color:#ffd319;', gc, 'ROUND ' + s.round + ' OF 20 · ' + s.phase);
+            let grow: HTMLElement=document.createElement('div');
+            grow.setAttribute('style', 'display:flex;align-items:center;gap:6px;');
+            gc.appendChild(grow);
+            this.el('div', 'color:#c9c9e3;font-size:17px;', grow, 'BUBBLE ' + s.bubble);
+            let wrap0: HTMLElement=document.createElement('span');
+            wrap0.className='tsch-bubwrap';
+            grow.appendChild(wrap0);
+            let fill0: HTMLElement=document.createElement('span');
+            fill0.className='tsch-bubfill' + (s.bubble>=15?' tsch-bubhot':'');
+            fill0.setAttribute('style', 'width:' + Math.min(100, s.bubble*5) + 'px;');
+            wrap0.appendChild(fill0);
+            let pname: string='NOBODY';
+            let pp: (typeof gs.state.players)[number]|undefined=gs.state.players[s.cur];
+            if(pp!==undefined){
+                pname=(pp as {name: string}).name.toUpperCase();
+            }
+            this.el('div', 'color:#c9c9e3;font-size:17px;', gc, pname + ' TO MOVE · ' + s.stage + ' · INTEREST ' + s.rate + ' PER 10 · STIPEND ' + s.stipend + ' · LAST ROLL ' + s.roll);
             for(let i=0;i<gs.state.players.length;i++){
                 let p: (typeof gs.state.players)[number]=gs.state.players[i] as (typeof gs.state.players)[number];
                 let hex: string='#' + (TOKEN_COLORS[i % TOKEN_COLORS.length] as number).toString(16).padStart(6, '0');
