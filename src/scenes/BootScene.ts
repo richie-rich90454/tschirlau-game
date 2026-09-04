@@ -9,6 +9,12 @@ export class BootScene extends Phaser.Scene{
     }
     create(): void{
         this.started=false;
+        try{
+            void document.fonts.load('700 64px "Noto Sans Mono"');
+            void document.fonts.load('400 24px "Noto Sans Mono"');
+        }
+        catch(e2){
+        }
         let w: number=this.scale.width;
         let h: number=this.scale.height;
         let g: Phaser.GameObjects.Graphics=this.add.graphics();
