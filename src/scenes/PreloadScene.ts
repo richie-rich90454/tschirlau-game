@@ -6,6 +6,15 @@ export class PreloadScene extends Phaser.Scene{
     constructor(){
         super('PreloadScene');
     }
+    sharpen(): void{
+        let kids: Array<Phaser.GameObjects.GameObject>=this.children.list;
+        for(let i=0;i<kids.length;i++){
+            let k: Phaser.GameObjects.GameObject|undefined=kids[i];
+            if(k instanceof Phaser.GameObjects.Text){
+                k.setResolution(2);
+            }
+        }
+    }
     create(): void{
         let w: number=this.scale.width;
         let h: number=this.scale.height;
@@ -29,6 +38,7 @@ export class PreloadScene extends Phaser.Scene{
         let fill: Phaser.GameObjects.Rectangle=this.add.rectangle(cx-bw/2, cy+10, 0, 16, 0xff2e88, 1);
         fill.setOrigin(0, 0.5);
         let pct: Phaser.GameObjects.Text=this.add.text(cx, cy+44, '0%', {fontFamily: FONT_DISPLAY, fontSize: '16px', color: '#22d3ee'}).setOrigin(0.5);
+        this.sharpen();
         let prog: {v: number}={v: 0};
         this.tweens.add({targets: prog, v: 100, duration: 750, ease: 'Cubic.easeIn', onUpdate: ()=>{
             fill.width=bw*(prog.v/100);
