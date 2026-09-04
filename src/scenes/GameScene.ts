@@ -34,6 +34,10 @@ export class GameScene extends Phaser.Scene{
     inspector: string='Click a tile to inspect it.';
     selectedPlotId: number|null=null;
     resizeTimer: Phaser.Time.TimerEvent|null=null;
+    lastBW: number=0;
+    lastBH: number=0;
+    lastBT: number=0;
+    lastBB: number=0;
     tileW: number=88;
     tileH: number=44;
     diceText: Phaser.GameObjects.Text|null=null;
@@ -66,9 +70,20 @@ export class GameScene extends Phaser.Scene{
                 this.resizeTimer.remove();
             }
             this.resizeTimer=this.time.delayedCall(180, ()=>{
-                this.rebuildBoard();
+                this.syncBoard();
             });
         });
+        this.time.addEvent({delay: 800, loop: true, callback: ()=>{
+            this.syncBoard();
+        }});
+        try{
+            void document.fonts.ready.then(()=>{
+                this.refreshBoard();
+                this.sharpen();
+            });
+        }
+        catch(e){
+        }
         this.scene.launch('UIScene');
     }
     buildBackground(): void{
@@ -315,14 +330,14 @@ export class GameScene extends Phaser.Scene{
         if(typeof v==='number'&&v>0){
             return v;
         }
-        return 90;
+        return 100;
     }
     hudBottom(): number{
         let v: unknown=this.registry.get('hudBottom');
         if(typeof v==='number'&&v>0){
             return v;
         }
-        return 190;
+        return 150;
     }
     bpos(i: number): {x: number, y: number}{
         return Board.posFor(i, this.scale.width, this.hudTop(), this.scale.height-this.hudTop()-this.hudBottom());
@@ -468,6 +483,19 @@ export class GameScene extends Phaser.Scene{
         this.renderBoardStatic();
         this.pulseStart();
         this.refreshBoard();
+    }
+    syncBoard(): void{
+        let w: number=this.scale.width;
+        let h: number=this.scale.height;
+        let t: number=this.hudTop();
+        let b: number=this.hudBottom();
+        if(w!==this.lastBW||h!==this.lastBH||t!==this.lastBT||b!==this.lastBB){
+            this.lastBW=w;
+            this.lastBH=h;
+            this.lastBT=t;
+            this.lastBB=b;
+            this.rebuildBoard();
+        }
     }
     selectTile(boardIdx: number): void{
         let st: GameState=this.state;
