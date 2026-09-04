@@ -30,6 +30,15 @@ export class BootScene extends Phaser.Scene{
             go();
         }
     }
+    sharpen(): void{
+        let kids: Array<Phaser.GameObjects.GameObject>=this.children.list;
+        for(let i=0;i<kids.length;i++){
+            let k: Phaser.GameObjects.GameObject|undefined=kids[i];
+            if(k instanceof Phaser.GameObjects.Text){
+                k.setResolution(2);
+            }
+        }
+    }
     buildTitle(): void{
         this.children.removeAll();
         let w: number=this.scale.width;
@@ -113,5 +122,6 @@ export class BootScene extends Phaser.Scene{
         this.input.keyboard?.on('keydown-SPACE', start);
         this.input.keyboard?.on('keydown-ENTER', start);
         this.input.on('pointerdown', start);
+        this.sharpen();
     }
 }
