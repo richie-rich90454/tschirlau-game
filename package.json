@@ -2,8 +2,8 @@
   "name": "tschirlau-game",
   "scripts": {
     "dev": "bun --hot index.html",
-    "build": "bun build src/main.ts --outdir=dist --target=browser --format=esm --sourcemap --minify",
-    "serve": "bunx --yes http-server dist -p 8080 -c-1",
+    "build": "bun build.ts",
+    "serve": "bun serve.ts",
     "typecheck": "tsc --noEmit"
   },
   "type": "module",
