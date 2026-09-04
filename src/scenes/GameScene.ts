@@ -639,7 +639,13 @@ export class GameScene extends Phaser.Scene{
         }});
     }
     updateTickers(): void{
-        for(let i=0;i<this.tickers.length;i++){
+        if(this.tickers.length===0){
+            if(this.tickerTimer!==null){
+                this.tickerTimer.remove();
+                this.tickerTimer=null;
+            }
+            return;
+        }        for(let i=0;i<this.tickers.length;i++){
             let e: Ticker|undefined=this.tickers[i];
             if(e===undefined){
                 continue;
