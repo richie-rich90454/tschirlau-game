@@ -38,6 +38,8 @@ export class GameScene extends Phaser.Scene{
     lastBH: number=0;
     lastBT: number=0;
     lastBB: number=0;
+    lastBL: number=0;
+    lastBR: number=0;
     tileW: number=88;
     tileH: number=44;
     diceText: Phaser.GameObjects.Text|null=null;
@@ -195,12 +197,15 @@ export class GameScene extends Phaser.Scene{
         if(h<300){
             h=300;
         }
-        let rx: number=Math.min(w*0.44, 450);
         let ry: number=Math.min(h*0.368, 227);
-        this.tileW=Math.max(56, Math.min(88, 2*rx/10-4));
+        let aw: number=w-this.hudLeft()-this.hudRight();
+        if(aw<400){
+            aw=400;
+        }
+        this.tileW=Math.max(56, Math.min(88, 2*Math.min(aw*0.44, 450)/10-4));
         this.tileH=Math.max(38, Math.min(44, 2*ry/10-4));
         for(let i=0;i<40;i++){
-            let p: {x: number, y: number}=Board.posFor(i, w, top, h);
+            let p: {x: number, y: number}=this.bpos(i);
             let c: number=colorForSpace(i);
             let tw: number=this.tileW;
             let th: number=this.tileH;
@@ -330,17 +335,31 @@ export class GameScene extends Phaser.Scene{
         if(typeof v==='number'&&v>0){
             return v;
         }
-        return 100;
+        return 40;
     }
     hudBottom(): number{
         let v: unknown=this.registry.get('hudBottom');
         if(typeof v==='number'&&v>0){
             return v;
         }
-        return 150;
+        return 34;
     }
     bpos(i: number): {x: number, y: number}{
-        return Board.posFor(i, this.scale.width, this.hudTop(), this.scale.height-this.hudTop()-this.hudBottom());
+        return Board.posFor(i, this.scale.width, this.hudTop(), this.scale.height-this.hudTop()-this.hudBottom(), this.hudLeft(), this.hudRight());
+    }
+    hudLeft(): number{
+        let v: unknown=this.registry.get('hudLeft');
+        if(typeof v==='number'&&v>0){
+            return v;
+        }
+        return 0;
+    }
+    hudRight(): number{
+        let v: unknown=this.registry.get('hudRight');
+        if(typeof v==='number'&&v>0){
+            return v;
+        }
+        return 0;
     }
     say(s: string): void{
         this.statusMsg=s;
@@ -489,11 +508,15 @@ export class GameScene extends Phaser.Scene{
         let h: number=this.scale.height;
         let t: number=this.hudTop();
         let b: number=this.hudBottom();
-        if(w!==this.lastBW||h!==this.lastBH||t!==this.lastBT||b!==this.lastBB){
+        let l: number=this.hudLeft();
+        let r: number=this.hudRight();
+        if(w!==this.lastBW||h!==this.lastBH||t!==this.lastBT||b!==this.lastBB||l!==this.lastBL||r!==this.lastBR){
             this.lastBW=w;
             this.lastBH=h;
             this.lastBT=t;
             this.lastBB=b;
+            this.lastBL=l;
+            this.lastBR=r;
             this.rebuildBoard();
         }
     }
