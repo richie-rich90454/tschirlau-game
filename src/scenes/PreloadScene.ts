@@ -1,7 +1,7 @@
 // Neon NOW LOADING interlude with percent readout, then hands off to GameScene.
 import Phaser from 'phaser';
-const FONT_DISPLAY: string='"Press Start 2P","Courier New",monospace';
-const FONT_BODY: string='"VT323","Courier New",monospace';
+const FONT_DISPLAY: string='"Noto Sans Mono",monospace';
+const FONT_BODY: string='"Noto Sans Mono",monospace';
 export class PreloadScene extends Phaser.Scene{
     constructor(){
         super('PreloadScene');
