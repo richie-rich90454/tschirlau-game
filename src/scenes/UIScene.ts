@@ -13,6 +13,12 @@ const CSS: string=`.tsch-btn{font-family:'Noto Sans Mono',monospace;font-size:20
 .tsch-cards{background:rgba(10,4,32,.93) !important;border-bottom:2px solid #b026ff !important;box-shadow:0 2px 14px rgba(176,38,255,.45) !important;font-family:'Noto Sans Mono',monospace !important;display:flex !important;gap:8px !important;padding:4px 10px !important;flex-wrap:wrap !important;}
 .tsch-card{border:1px solid #444466;padding:0 8px;min-width:150px;line-height:1.05;}
 .tsch-card-cur{border-color:#ffd319 !important;box-shadow:0 0 12px rgba(255,211,25,.65);}
+.tsch-tab{opacity:0.75;}
+.tsch-tabon{opacity:1 !important;border-color:#ffd319 !important;text-shadow:0 0 8px #ffd319 !important;box-shadow:0 0 14px rgba(255,211,25,.7) !important;}
+.tsch-tabpage{width:100%;}
+.tsch-side{position:absolute;top:40px;bottom:34px;width:250px;background:rgba(10,4,32,.94);border:2px solid #b026ff;box-shadow:0 0 16px rgba(176,38,255,.5);overflow-y:auto;padding:8px;pointer-events:auto;}
+.tsch-right{right:6px;width:270px;border-color:#22d3ee;box-shadow:0 0 16px rgba(34,211,238,.5);}
+.tsch-left{left:6px;}
 .tsch-group{border:1px solid #444466;padding:4px 6px;display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
 .tsch-glabel{width:100%;font-size:15px;color:#ff71ce;letter-spacing:3px;}
 .tsch-insp{color:#22d3ee;font-size:21px;min-height:24px;white-space:nowrap;overflow:hidden;text-shadow:0 0 8px rgba(34,211,238,.6);}
@@ -40,8 +46,10 @@ export class UIScene extends Phaser.Scene{
     topBar: HTMLElement|null=null;
     plist: HTMLElement|null=null;
     msg: HTMLElement|null=null;
-    insp: HTMLElement|null=null;
     botEl: HTMLElement|null=null;
+    lastInspector: string='';
+    inspUntil: number=0;
+    playersOpen: boolean=true;
     btns: Record<string, HTMLButtonElement>={};
     setupBox: HTMLElement|null=null;
     buyBox: HTMLElement|null=null;
@@ -51,6 +59,16 @@ export class UIScene extends Phaser.Scene{
     repayIn: HTMLInputElement|null=null;
     bidIn: HTMLInputElement|null=null;
     jointSel: HTMLSelectElement|null=null;
+    controlsOpen: boolean=true;
+    leftEl: HTMLElement|null=null;
+    rightEl: HTMLElement|null=null;
+    activeTab: string='build';
+    appliedTab: string='';
+    prevDeal: boolean=false;
+    tabBtns: Record<string, HTMLButtonElement>={};
+    tabBuild: HTMLElement|null=null;
+    tabBank: HTMLElement|null=null;
+    tabDeals: HTMLElement|null=null;
     rulesBox: HTMLElement|null=null;
     bgmOn: boolean=false;
     constructor(){
@@ -85,6 +103,10 @@ export class UIScene extends Phaser.Scene{
                 this.g().buildOn(parseInt(s2.value, 10), d2.checked);
             }
         });
+        this.playersOpen=window.innerWidth>=1100;
+        (this.btns['players'] as HTMLButtonElement).textContent=this.playersOpen?'PLAYERS: HIDE':'PLAYERS: SHOW';
+        this.controlsOpen=window.innerWidth>=1100;
+        (this.btns['controls'] as HTMLButtonElement).textContent=this.controlsOpen?'CONTROLS: HIDE':'CONTROLS: SHOW';
         this.refresh();
     }
     injectCss(): void{
@@ -120,10 +142,15 @@ export class UIScene extends Phaser.Scene{
         top.setAttribute('style', 'position:absolute;top:0;left:0;right:0;padding:6px 10px;pointer-events:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;');
         r.appendChild(top);
         this.topBar=top;
+        let left: HTMLElement=document.createElement('div');
+        left.className='tsch-side tsch-left';
+        left.setAttribute('style', 'color:#fff;font-size:18px;');
+        r.appendChild(left);
+        this.leftEl=left;
         let pl: HTMLElement=document.createElement('div');
         pl.className='tsch-cards';
-        pl.setAttribute('style', 'position:absolute;top:34px;left:0;right:0;color:#fff;font-size:18px;pointer-events:auto;');
-        r.appendChild(pl);
+        pl.setAttribute('style', 'color:#fff;font-size:18px;');
+        left.appendChild(pl);
         this.plist=pl;
         let bot: HTMLElement=document.createElement('div');
         bot.className='tsch-bot';
@@ -138,102 +165,112 @@ export class UIScene extends Phaser.Scene{
         m.setAttribute('style', 'flex:1;min-width:0;');
         brow.appendChild(m);
         this.msg=m;
-        let insp: HTMLElement=document.createElement('div');
-        insp.className='tsch-insp';
-        insp.setAttribute('style', 'flex:1;min-width:0;');
-        insp.textContent='Click a tile to inspect it.';
-        brow.appendChild(insp);
-        this.insp=insp;
+        let right: HTMLElement=document.createElement('div');
+        right.className='tsch-side tsch-right';
+        r.appendChild(right);
+        this.rightEl=right;
         let row: HTMLElement=document.createElement('div');
         row.setAttribute('style', 'display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;');
-        bot.appendChild(row);
-        let gRoll: HTMLElement=document.createElement('div');
-        gRoll.className='tsch-group';
-        row.appendChild(gRoll);
-        this.glabel(gRoll, 'DICE');
-        this.btns['roll']=this.btn('ROLL DICE [R]', gRoll, ()=>{this.g().rollAndMove();});
-        this.btns['pay']=this.btn('PAY AMOUNT DUE', gRoll, ()=>{this.g().payDue();});
-        let gTurn: HTMLElement=document.createElement('div');
-        gTurn.className='tsch-group';
-        row.appendChild(gTurn);
-        this.glabel(gTurn, 'TURN');
-        this.btns['end']=this.btn('END TURN [E]', gTurn, ()=>{this.g().endTurn();});
-        this.btns['bankrupt']=this.btn('DECLARE BANKRUPTCY', gTurn, ()=>{this.g().declareBankruptcy();});
-        let gBuild: HTMLElement=document.createElement('div');
-        gBuild.className='tsch-group';
-        row.appendChild(gBuild);
-        this.glabel(gBuild, 'BUILD');
+        right.appendChild(row);
+        let gCore: HTMLElement=document.createElement('div');
+        gCore.className='tsch-group';
+        row.appendChild(gCore);
+        this.glabel(gCore, 'ALWAYS');
+        this.btns['roll']=this.btn('ROLL DICE [R]', gCore, ()=>{this.g().rollAndMove();});
+        this.btns['pay']=this.btn('PAY AMOUNT DUE', gCore, ()=>{this.g().payDue();});
+        this.btns['end']=this.btn('END TURN [E]', gCore, ()=>{this.g().endTurn();});
+        this.btns['bankrupt']=this.btn('DECLARE BANKRUPTCY', gCore, ()=>{this.g().declareBankruptcy();});
+        let tb1: HTMLButtonElement=this.btn('BUILD', gCore, ()=>{this.setTab('build');});
+        tb1.classList.add('tsch-tab');
+        let tb2: HTMLButtonElement=this.btn('BANK', gCore, ()=>{this.setTab('bank');});
+        tb2.classList.add('tsch-tab');
+        let tb3: HTMLButtonElement=this.btn('DEALS', gCore, ()=>{this.setTab('deals');});
+        tb3.classList.add('tsch-tab');
+        this.tabBtns['build']=tb1;
+        this.tabBtns['bank']=tb2;
+        this.tabBtns['deals']=tb3;
+        let tabBuild: HTMLElement=document.createElement('div');
+        tabBuild.className='tsch-group tsch-tabpage';
+        row.appendChild(tabBuild);
+        this.tabBuild=tabBuild;
+        this.glabel(tabBuild, 'BUILD');
         let bs: HTMLSelectElement=document.createElement('select');
         bs.className='tsch-in';
-        gBuild.appendChild(bs);
+        tabBuild.appendChild(bs);
         this.buildSel=bs;
         let dl: HTMLElement=document.createElement('label');
         dl.setAttribute('style', 'font-size:17px;color:#ff71ce;');
-        gBuild.appendChild(dl);
+        tabBuild.appendChild(dl);
         let dc: HTMLInputElement=document.createElement('input');
         dc.type='checkbox';
         dl.appendChild(dc);
         dl.appendChild(document.createTextNode('defer payment'));
         this.deferBox=dc;
-        this.btns['build']=this.btn('BUILD LEVEL [B]', gBuild, ()=>{
+        this.btns['build']=this.btn('BUILD LEVEL [B]', tabBuild, ()=>{
             let s: HTMLSelectElement=this.buildSel as HTMLSelectElement;
             let d: HTMLInputElement=this.deferBox as HTMLInputElement;
             this.g().buildOn(parseInt(s.value, 10), d.checked);
         });
-        this.btns['mort']=this.btn('MORTGAGE', gBuild, ()=>{
+        this.btns['mort']=this.btn('MORTGAGE', tabBuild, ()=>{
             let s: HTMLSelectElement=this.buildSel as HTMLSelectElement;
             this.g().mortgagePlot(parseInt(s.value, 10));
         });
-        this.btns['unmort']=this.btn('LIFT MORTGAGE', gBuild, ()=>{
+        this.btns['unmort']=this.btn('LIFT MORTGAGE', tabBuild, ()=>{
             let s: HTMLSelectElement=this.buildSel as HTMLSelectElement;
             this.g().repayMortgage(parseInt(s.value, 10));
         });
-        this.btns['abandon']=this.btn('ABANDON GATE', gBuild, ()=>{this.g().abandonGrandGate();});
-        let gBank: HTMLElement=document.createElement('div');
-        gBank.className='tsch-group';
-        row.appendChild(gBank);
-        this.glabel(gBank, 'BANK');
+        this.btns['abandon']=this.btn('ABANDON GATE', tabBuild, ()=>{this.g().abandonGrandGate();});
+        let tabBank: HTMLElement=document.createElement('div');
+        tabBank.className='tsch-group tsch-tabpage';
+        tabBank.setAttribute('style', 'display:none;');
+        row.appendChild(tabBank);
+        this.tabBank=tabBank;
+        this.glabel(tabBank, 'BANK');
         let li: HTMLInputElement=document.createElement('input');
         li.placeholder='loan 1 to 20';
         li.className='tsch-in';
         li.setAttribute('style', 'width:110px;');
-        gBank.appendChild(li);
+        tabBank.appendChild(li);
         this.loanIn=li;
-        this.btns['loan']=this.btn('TAKE LOAN', gBank, ()=>{this.g().takeLoan(parseInt((this.loanIn as HTMLInputElement).value || '0', 10));});
+        this.btns['loan']=this.btn('TAKE LOAN', tabBank, ()=>{this.g().takeLoan(parseInt((this.loanIn as HTMLInputElement).value || '0', 10));});
         let ri: HTMLInputElement=document.createElement('input');
         ri.placeholder='repayment amount';
         ri.className='tsch-in';
         ri.setAttribute('style', 'width:130px;');
-        gBank.appendChild(ri);
+        tabBank.appendChild(ri);
         this.repayIn=ri;
-        this.btns['repay']=this.btn('REPAY DEBT', gBank, ()=>{this.g().repayDebt(parseInt((this.repayIn as HTMLInputElement).value || '0', 10));});
-        this.btns['sellC']=this.btn('SELL CONCRETE', gBank, ()=>{this.g().sellMaterial('concrete', 1);});
-        this.btns['sellS']=this.btn('SELL STEEL', gBank, ()=>{this.g().sellMaterial('steel', 1);});
-        this.btns['sellG']=this.btn('SELL GLASS', gBank, ()=>{this.g().sellMaterial('glass', 1);});
-        let gDeal: HTMLElement=document.createElement('div');
-        gDeal.className='tsch-group';
-        row.appendChild(gDeal);
-        this.glabel(gDeal, 'DEALS');
+        this.btns['repay']=this.btn('REPAY DEBT', tabBank, ()=>{this.g().repayDebt(parseInt((this.repayIn as HTMLInputElement).value || '0', 10));});
+        this.btns['sellC']=this.btn('SELL CONCRETE', tabBank, ()=>{this.g().sellMaterial('concrete', 1);});
+        this.btns['sellS']=this.btn('SELL STEEL', tabBank, ()=>{this.g().sellMaterial('steel', 1);});
+        this.btns['sellG']=this.btn('SELL GLASS', tabBank, ()=>{this.g().sellMaterial('glass', 1);});
+        let tabDeals: HTMLElement=document.createElement('div');
+        tabDeals.className='tsch-group tsch-tabpage';
+        tabDeals.setAttribute('style', 'display:none;');
+        row.appendChild(tabDeals);
+        this.tabDeals=tabDeals;
+        this.glabel(tabDeals, 'DEALS');
         let bi: HTMLInputElement=document.createElement('input');
         bi.placeholder='bid amount';
         bi.className='tsch-in';
         bi.setAttribute('style', 'width:100px;');
-        gDeal.appendChild(bi);
+        tabDeals.appendChild(bi);
         this.bidIn=bi;
-        this.btns['bid']=this.btn('PLACE BID', gDeal, ()=>{this.g().placeBid(parseInt((this.bidIn as HTMLInputElement).value || '0', 10));});
-        this.btns['pass']=this.btn('PASS BID', gDeal, ()=>{this.g().passBid();});
+        this.btns['bid']=this.btn('PLACE BID', tabDeals, ()=>{this.g().placeBid(parseInt((this.bidIn as HTMLInputElement).value || '0', 10));});
+        this.btns['pass']=this.btn('PASS BID', tabDeals, ()=>{this.g().passBid();});
         let js: HTMLSelectElement=document.createElement('select');
         js.className='tsch-in';
         js.setAttribute('style', 'max-width:150px;');
-        gDeal.appendChild(js);
+        tabDeals.appendChild(js);
         this.jointSel=js;
-        this.btns['joint']=this.btn('START JOINT VENTURE', gDeal, ()=>{this.g().startJoint(parseInt((this.jointSel as HTMLSelectElement).value || '0', 10));});
-        this.btns['coop']=this.btn('COOPERATE', gDeal, ()=>{this.jointPick('C');});
-        this.btns['defect']=this.btn('DEFECT', gDeal, ()=>{this.jointPick('D');});
-        this.btns['declineJ']=this.btn('DECLINE VENTURE', gDeal, ()=>{this.g().declineJoint();});
+        this.btns['joint']=this.btn('START JOINT VENTURE', tabDeals, ()=>{this.g().startJoint(parseInt((this.jointSel as HTMLSelectElement).value || '0', 10));});
+        this.btns['coop']=this.btn('COOPERATE', tabDeals, ()=>{this.jointPick('C');});
+        this.btns['defect']=this.btn('DEFECT', tabDeals, ()=>{this.jointPick('D');});
+        this.btns['declineJ']=this.btn('DECLINE VENTURE', tabDeals, ()=>{this.g().declineJoint();});
         let bg: HTMLButtonElement=this.btn('BGM: OFF', top, ()=>{this.toggleBgm(bg);});
         this.btns['bgm']=bg;
         this.btn('RULES', top, ()=>{this.showRules(true);});
+        this.btns['players']=this.btn('PLAYERS: HIDE', top, ()=>{this.togglePlayers();});
+        this.btns['controls']=this.btn('CONTROLS: HIDE', top, ()=>{this.toggleControls();});
         let bb: HTMLElement=document.createElement('div');
         bb.className='tsch-modal';
         bb.setAttribute('style', 'display:none;');
@@ -261,6 +298,14 @@ export class UIScene extends Phaser.Scene{
             this.bgmOn=true;
             b.textContent='BGM: ON';
         }
+    }
+    togglePlayers(): void{
+        this.playersOpen=!this.playersOpen;
+        (this.btns['players'] as HTMLButtonElement).textContent=this.playersOpen?'PLAYERS: HIDE':'PLAYERS: SHOW';
+    }
+    toggleControls(): void{
+        this.controlsOpen=!this.controlsOpen;
+        (this.btns['controls'] as HTMLButtonElement).textContent=this.controlsOpen?'CONTROLS: HIDE':'CONTROLS: SHOW';
     }
     jointPick(mine: string): void{
         let gs: GameScene=this.g();
@@ -374,15 +419,37 @@ export class UIScene extends Phaser.Scene{
             e.classList.remove('tsch-marq');
         }
     }
+    setTab(n: string): void{
+        this.activeTab=n;
+        this.applyTab();
+    }
+    applyTab(): void{
+        if(this.appliedTab===this.activeTab){
+            return;
+        }
+        this.appliedTab=this.activeTab;
+        let pages: Record<string, HTMLElement|null>={build: this.tabBuild, bank: this.tabBank, deals: this.tabDeals};
+        for(let k in pages){
+            let pg: HTMLElement|null|undefined=pages[k];
+            if(pg!==undefined&&pg!==null){
+                pg.style.display=k===this.activeTab?'flex':'none';
+            }
+            let tb: HTMLButtonElement|undefined=this.tabBtns[k];
+            if(tb!==undefined){
+                if(k===this.activeTab){
+                    tb.classList.add('tsch-tabon');
+                }
+                else{
+                    tb.classList.remove('tsch-tabon');
+                }
+            }
+        }
+    }
     topBarHeight(): number{
-        let t: number=0;
         if(this.topBar!==null){
-            t=t+this.topBar.offsetHeight;
+            return this.topBar.offsetHeight;
         }
-        if(this.plist!==null){
-            t=t+this.plist.offsetHeight;
-        }
-        return t;
+        return 36;
     }
     bottomHeight(): number{
         if(this.botEl!==null){
@@ -398,6 +465,32 @@ export class UIScene extends Phaser.Scene{
         let s: ReturnType<GameScene['hudSnapshot']>=gs.hudSnapshot();
         this.registry.set('hudTop', this.topBarHeight());
         this.registry.set('hudBottom', this.bottomHeight());
+        let wide: boolean=window.innerWidth>=1100;
+        let lw: number=0;
+        if(wide&&this.playersOpen&&this.leftEl!==null){
+            lw=this.leftEl.offsetWidth;
+        }
+        let rw: number=0;
+        if(wide&&this.controlsOpen&&this.rightEl!==null){
+            rw=this.rightEl.offsetWidth;
+        }
+        this.registry.set('hudLeft', lw);
+        this.registry.set('hudRight', rw);
+        if(this.leftEl!==null){
+            this.leftEl.style.display=this.playersOpen?'block':'none';
+        }
+        if(this.rightEl!==null){
+            this.rightEl.style.display=this.controlsOpen?'block':'none';
+        }
+        let wantDeal: boolean=s.auction!==null||s.joint!==null;
+        if(wantDeal&&!this.prevDeal){
+            this.activeTab='deals';
+        }
+        if(!wantDeal&&this.prevDeal){
+            this.activeTab='build';
+        }
+        this.prevDeal=wantDeal;
+        this.applyTab();
         if(this.topBar!==null){
             this.topBar.textContent='';
             let ttl: HTMLElement=document.createElement('span');
@@ -416,6 +509,7 @@ export class UIScene extends Phaser.Scene{
             }
         }
         if(this.plist!==null){
+            this.plist.style.display=this.playersOpen?'flex':'none';
             this.plist.textContent='';
             let gc: HTMLElement=document.createElement('div');
             gc.className='tsch-card';
@@ -449,14 +543,20 @@ export class UIScene extends Phaser.Scene{
                 this.el('div', 'color:#c9c9e3;font-size:17px;', card, '' + p.credits + ' CREDITS · DEBT ' + p.debtToBank + ' · HYPE ' + p.hype + ' · CONCRETE ' + p.concrete + ' · STEEL ' + p.steel + ' · GLASS ' + p.glass + ' · SPACE ' + p.position + ' · PLOTS ' + p.ownedPlots.length);
             }
         }
-        if(this.msg!==null){
-            this.msg.textContent=s.msg;
-            this.msg.className='tsch-msg' + (s.mustPay>0?' tsch-due':'');
-            this.marq(this.msg);
+        let nowMs: number=Date.now();
+        if(s.inspector!==this.lastInspector){
+            this.lastInspector=s.inspector;
+            this.inspUntil=nowMs+8000;
         }
-        if(this.insp!==null){
-            this.insp.textContent=s.inspector;
-            this.marq(this.insp);
+        let showInsp: boolean=nowMs<this.inspUntil&&s.inspector!=='';
+        if(this.msg!==null){
+            this.msg.textContent=showInsp?s.inspector:s.msg;
+            this.msg.className='tsch-msg' + (!showInsp&&s.mustPay>0?' tsch-due':'');
+            if(showInsp){
+                this.msg.style.setProperty('--tsch-shift', '0px');
+                this.msg.classList.remove('tsch-marq');
+            }
+            this.marq(this.msg);
         }
         let canAct: boolean=s.stage==='ACTION'&&!s.over;
         let canRoll: boolean=s.stage==='ROLL'&&!s.over;
