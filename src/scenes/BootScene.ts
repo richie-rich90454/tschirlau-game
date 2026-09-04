@@ -29,6 +29,9 @@ export class BootScene extends Phaser.Scene{
         catch(e){
             go();
         }
+        this.scale.on('resize', ()=>{
+            this.scene.restart();
+        });
     }
     sharpen(): void{
         let kids: Array<Phaser.GameObjects.GameObject>=this.children.list;
