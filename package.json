@@ -4,7 +4,7 @@
     "dev": "bun --hot index.html",
     "build": "bun build.ts",
     "serve": "bun serve.ts",
-    "package": "bun build.ts && bun build --compile package.ts --outfile tschirlau",
+    "package": "bun build.ts && bun build --compile package.ts --outfile tschirlau --windows-icon ./assets/icon.ico",
     "typecheck": "tsc --noEmit"
   },
   "type": "module",
