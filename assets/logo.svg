@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640">
+<g transform="translate(77,77) scale(0.95)">
+<rect x="0" y="0" width="512" height="512" fill="#0d0424"/>
+<rect x="14" y="14" width="484" height="484" fill="none" stroke="#ff2e88" stroke-width="6" opacity="0.8"/>
+<g fill="#ffffff">
+<circle cx="70" cy="80" r="3.5"/>
+<circle cx="140" cy="60" r="2.5"/>
+<circle cx="200" cy="120" r="3"/>
+<circle cx="330" cy="70" r="3.5" fill="#22d3ee"/>
+<circle cx="400" cy="110" r="2.5"/>
+<circle cx="450" cy="180" r="3.5"/>
+<circle cx="90" cy="170" r="2.5" fill="#22d3ee"/>
+<circle cx="370" cy="160" r="3"/>
+</g>
+<circle cx="256" cy="235" r="100" fill="#ffd319"/>
+<g fill="#ff2e88">
+<path d="M157,250 L355,250 L352,262 L160,262 Z"/>
+<path d="M163,272 L349,272 L341,288 L171,288 Z"/>
+<path d="M179,298 L333,298 L312,318 L200,318 Z"/>
+</g>
+<g stroke="#22d3ee" stroke-width="3" opacity="0.55">
+<path d="M0,412 L512,412"/>
+<path d="M0,430 L512,430"/>
+<path d="M0,454 L512,454"/>
+<path d="M256,400 L16,496"/>
+<path d="M256,400 L101,496"/>
+<path d="M256,400 L186,496"/>
+<path d="M256,400 L256,496"/>
+<path d="M256,400 L326,496"/>
+<path d="M256,400 L411,496"/>
+<path d="M256,400 L496,496"/>
+</g>
+<ellipse cx="256" cy="406" rx="120" ry="12" fill="#ff2e88" opacity="0.45"/>
+<path d="M176,190 H336 V400 H176 Z M226,400 V300 A30,30 0 0 1 286,300 V400 Z" fill="#05010f" fill-rule="evenodd" stroke="#22d3ee" stroke-width="7"/>
+<rect x="179" y="208" width="44" height="12" fill="#ffd319"/>
+<rect x="289" y="208" width="44" height="12" fill="#ffd319"/>
+</g>
+<text x="604" y="300" font-family="'Noto Sans Mono',monospace" font-weight="bold" font-size="104" letter-spacing="6" fill="#ff2e88" opacity="0.85">TSCHIRLAU</text>
+<text x="600" y="296" font-family="'Noto Sans Mono',monospace" font-weight="bold" font-size="104" letter-spacing="6" fill="#ffd319">TSCHIRLAU</text>
+<text x="604" y="368" font-family="'Noto Sans Mono',monospace" font-size="34" letter-spacing="6" fill="#22d3ee">THE GRAND GATE MIRAGE</text>
+<text x="604" y="420" font-family="'Noto Sans Mono',monospace" font-size="22" fill="#ff71ce">A REAL-ESTATE FEVER DREAM · HOT-SEAT 2-6</text>
+</svg>
